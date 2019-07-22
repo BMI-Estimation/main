@@ -42,8 +42,8 @@ for x in range(0, 1):
 	edged = cv2.erode(edged, None, iterations=20)
 
 # show edge detection
-cv2.imshow('edge', edged)
-cv2.waitKey(0)
+# cv2.imshow('edge', edged)
+# cv2.waitKey(0)
 
 # find contours in the edge map
 cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
@@ -137,9 +137,9 @@ for c in cnts:
 	# show the output image
 	cv2.imshow("Image", orig)
 	
-	cimg = np.zeros_like(orig)
-	cv2.drawContours(cimg, c, -1, color=255, thickness=-1)
-	cv2.imshow("bin", cimg)
+	# cimg = np.zeros_like(orig)
+	# cv2.drawContours(cimg, c, -1, color=255, thickness=-1)
+	# cv2.imshow("bin", cimg)
 
 	# mask = np.zeros(orig.shape,np.uint8)
 	# cv2.drawContours(mask,c,0,255,-1)
@@ -149,7 +149,8 @@ for c in cnts:
 	# create a simple mask image similar 
 	# to the loaded image, with the  
 	# shape and return type 
-	mask = np.zeros(orig.shape[:2], np.uint8) 
+	maskOrig = image.copy()
+	mask = np.zeros(maskOrig.shape[:2], np.uint8) 
    
 	# specify the background and foreground model 
 	# using numpy the array is constructed of 1 row 
@@ -164,16 +165,15 @@ for c in cnts:
 	# (startingPoint_x, startingPoint_y, width, height) 
 	# these coordinates are according to the input image 
 	# it may vary for different images 
-	# rectangle = (tl[0], tl[1], tr[0] - tr[0], tl[1] - br[1]) 
 	rectangle = (tl[0], tl[1], tr[0] - tl[0], bl[1] - tl[1]) 
 	# apply the grabcut algorithm with appropriate 
 	# values as parameters, number of iterations = 3  
 	# cv2.GC_INIT_WITH_RECT is used because 
 	# of the rectangle mode is used  
-	cv2.grabCut(orig, mask, rectangle, backgroundModel, foregroundModel, 3, cv2.GC_INIT_WITH_RECT) 
+	cv2.grabCut(maskOrig, mask, rectangle, backgroundModel, foregroundModel, 3, cv2.GC_INIT_WITH_RECT) 
 	mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8') 
-	orig = orig * mask2[:, :, np.newaxis]
-	cv2.imshow('mask', orig) 
+	maskOrig = maskOrig * mask2[:, :, np.newaxis]
+	cv2.imshow('mask', maskOrig) 
 	# plt.colorbar() 
 	# plt.show() 
 	cv2.waitKey(0)
