@@ -21,7 +21,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
 	help="path to the input image")
 ap.add_argument("-w", "--width", type=float, required=True,
-	help="width of the left-most object in the image (in inches)")
+	help="width of the left-most object in the image (in meters)")
 args = vars(ap.parse_args())
 
 # load the image, convert it to grayscale, and blur it slightly
@@ -145,4 +145,35 @@ for c in cnts:
 	# cv2.drawContours(mask,c,0,255,-1)
 	# pixelpoints = cv2.findNonZero(mask)
 	# print(pixelpoints)
+
+	# create a simple mask image similar 
+	# to the loaded image, with the  
+	# shape and return type 
+	mask = np.zeros(orig.shape[:2], np.uint8) 
+   
+	# specify the background and foreground model 
+	# using numpy the array is constructed of 1 row 
+	# and 65 columns, and all array elements are 0 
+	# Data type for the array is np.float64 (default) 
+	backgroundModel = np.zeros((1, 65), np.float64) 
+	foregroundModel = np.zeros((1, 65), np.float64) 
+   
+	# define the Region of Interest (ROI) 
+	# as the coordinates of the rectangle 
+	# where the values are entered as 
+	# (startingPoint_x, startingPoint_y, width, height) 
+	# these coordinates are according to the input image 
+	# it may vary for different images 
+	# rectangle = (tl[0], tl[1], tr[0] - tr[0], tl[1] - br[1]) 
+	rectangle = (tl[0], tl[1], tr[0] - tl[0], bl[1] - tl[1]) 
+	# apply the grabcut algorithm with appropriate 
+	# values as parameters, number of iterations = 3  
+	# cv2.GC_INIT_WITH_RECT is used because 
+	# of the rectangle mode is used  
+	cv2.grabCut(orig, mask, rectangle, backgroundModel, foregroundModel, 3, cv2.GC_INIT_WITH_RECT) 
+	mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8') 
+	orig = orig * mask2[:, :, np.newaxis]
+	cv2.imshow('mask', orig) 
+	# plt.colorbar() 
+	# plt.show() 
 	cv2.waitKey(0)
