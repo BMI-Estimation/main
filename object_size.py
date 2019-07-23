@@ -14,6 +14,7 @@ import imutils
 import cv2
 import matplotlib.pyplot as plt
 import preprocessing
+import edgeDetection
 
 def midpoint(ptA, ptB):
 	return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
@@ -26,37 +27,25 @@ ap.add_argument("-w", "--width", type=float, required=True,
 	help="width of the left-most object in the image (in meters)")
 args = vars(ap.parse_args())
 
-# load the image, convert it to grayscale, and blur it slightly
+# convert image to grayscale, and blur it to remove some noise
 image = cv2.imread(args["image"])
 gray = preprocessing.blurImage(image)
 
-# show grey image
-# cv2.imshow('grey', gray)
-# cv2.waitKey(0)
+# perform edge detection, then rough image closing to complete edges
+edged = edgeDetection.gray2binaryEdgedImage(gray)
+# # find contours in the edge map
+# cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
+# 	cv2.CHAIN_APPROX_SIMPLE)
+# cnts = imutils.grab_contours(cnts)
 
-# perform edge detection, then perform a dilation + erosion to
-# close gaps in between object edges
-edged = cv2.Canny(gray, 100, 110)
-for x in range(0, 1):
-	edged = cv2.dilate(edged, None, iterations=20)
-	edged = cv2.erode(edged, None, iterations=20)
-
-# show edge detection
-# cv2.imshow('edge', edged)
-# cv2.waitKey(0)
-
-# find contours in the edge map
-cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
-	cv2.CHAIN_APPROX_SIMPLE)
-cnts = imutils.grab_contours(cnts)
-
-# sort the contours from left-to-right and initialize the
-# 'pixels per metric' calibration variable
-(cnts, _) = contours.sort_contours(cnts)
+# # sort the contours from left-to-right and initialize the
+# # 'pixels per metric' calibration variable
+# (cnts, _) = contours.sort_contours(cnts)
+contours = edgeDetection.returnContours(edged)
 pixelsPerMetric = None
 
 # loop over the contours individually
-for c in cnts:
+for c in contours:
 	# if the contour is not sufficiently large, ignore it
 	if cv2.contourArea(c) < 2000:
 		continue
