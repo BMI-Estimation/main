@@ -4,6 +4,7 @@
 # python object_size.py --image images/example_03.png --width 3.5
 
 # import the necessary packages
+# import tensorflow
 from scipy.spatial import distance as dist
 from imutils import perspective
 from imutils import contours
@@ -12,6 +13,7 @@ import argparse
 import imutils
 import cv2
 import matplotlib.pyplot as plt
+import preprocessing
 
 def midpoint(ptA, ptB):
 	return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
@@ -26,9 +28,7 @@ args = vars(ap.parse_args())
 
 # load the image, convert it to grayscale, and blur it slightly
 image = cv2.imread(args["image"])
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-for x in range(0, 1):
-	gray = cv2.GaussianBlur(gray, (7, 7), 0)
+gray = preprocessing.blurImage(image)
 
 # show grey image
 # cv2.imshow('grey', gray)
