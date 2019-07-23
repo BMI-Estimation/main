@@ -5,10 +5,12 @@
 
 import argparse
 import cv2
+from matplotlib import pyplot as plt
 import preprocessing
 import edgeDetection
 import boundingBoxes
 import maskExtraction
+import binaryMask
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -47,4 +49,6 @@ for c in contours:
 	maskOrig = maskExtraction.extractObjectForegroundMask(maskOrig, box)
 	cv2.imshow('mask', maskOrig) 
 
+	binImage = binaryMask.mask2binary(maskOrig)
+	cv2.imshow("binmask", binImage)
 	cv2.waitKey(0)
