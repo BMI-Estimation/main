@@ -13,6 +13,6 @@ def returnContours(edgedImage):
   # find contours in the edge map
   cnts = cv2.findContours(edgedImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   cnts = grab_contours(cnts)
-# sort the contours from left-to-right
+  # sort the contours from left-to-right
   (cnts, _) = contours.sort_contours(cnts)
   return cnts

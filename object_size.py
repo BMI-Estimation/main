@@ -33,14 +33,7 @@ gray = preprocessing.blurImage(image)
 
 # perform edge detection, then rough image closing to complete edges
 edged = edgeDetection.gray2binaryEdgedImage(gray)
-# # find contours in the edge map
-# cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,
-# 	cv2.CHAIN_APPROX_SIMPLE)
-# cnts = imutils.grab_contours(cnts)
-
-# # sort the contours from left-to-right and initialize the
-# # 'pixels per metric' calibration variable
-# (cnts, _) = contours.sort_contours(cnts)
+# extract contours
 contours = edgeDetection.returnContours(edged)
 pixelsPerMetric = None
 
