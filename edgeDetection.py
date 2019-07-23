@@ -4,6 +4,7 @@ from imutils import contours
 
 def gray2binaryEdgedImage(gray):
   edged = cv2.Canny(gray, 100, 110)
+  # perform rough closing on the image to remove small contours
   for x in range(0, 1):
 	  edged = cv2.dilate(edged, None, iterations=20)
 	  edged = cv2.erode(edged, None, iterations=20)
