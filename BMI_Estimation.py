@@ -3,7 +3,6 @@
 # python object_size.py --image images/example_02.png --width 0.955
 # python object_size.py --image images/example_03.png --width 3.5
 
-import numpy as np
 import argparse
 import cv2
 import preprocessing
