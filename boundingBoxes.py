@@ -44,7 +44,7 @@ def drawBoundingBoxes(img, box, refWidth, pixelsPerMetric):
   dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
   dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
 
-
+  # only set pixelspermetric for the first contour that is evaluated (left-most => reference object)
   if pixelsPerMetric is None:
 	  pixelsPerMetric = dB/refWidth
 	  print('pixelspermetric is ', pixelsPerMetric)
@@ -54,10 +54,10 @@ def drawBoundingBoxes(img, box, refWidth, pixelsPerMetric):
   dimB = dB / pixelsPerMetric
 
   # draw the object sizes on the image
-  cv2.putText(img, "{:.1f}cm".format(dimA),
+  cv2.putText(img, "{:.1f}m".format(dimA),
 		(int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
 		0.65, (255, 255, 255), 2)
-  cv2.putText(img, "{:.1f}cm".format(dimB),
+  cv2.putText(img, "{:.1f}m".format(dimB),
 		(int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
 		0.65, (255, 255, 255), 2)
 
