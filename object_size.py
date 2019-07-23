@@ -3,20 +3,12 @@
 # python object_size.py --image images/example_02.png --width 0.955
 # python object_size.py --image images/example_03.png --width 3.5
 
-# import the necessary packages
-# import tensorflow
-from imutils import contours
 import numpy as np
 import argparse
-import imutils
 import cv2
-import matplotlib.pyplot as plt
 import preprocessing
 import edgeDetection
 import boundingBoxes
-
-# def midpoint(ptA, ptB):
-# 	return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -76,6 +68,5 @@ for c in contours:
 	mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8') 
 	maskOrig = maskOrig * mask2[:, :, np.newaxis]
 	cv2.imshow('mask', maskOrig) 
-	# plt.colorbar() 
-	# plt.show() 
+
 	cv2.waitKey(0)
