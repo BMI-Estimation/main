@@ -6,6 +6,7 @@
 import argparse
 import cv2
 from matplotlib import pyplot as plt
+import numpy as np
 import preprocessing
 import edgeDetection
 import boundingBoxes
@@ -41,14 +42,19 @@ for c in contours:
 	box = boundingBoxes.findBoundingBox(c)
 	orig, pixelsPerMetric = boundingBoxes.drawBoundingBoxes(orig, box, args["width"], pixelsPerMetric)
 	# show the output image with bounding box drawn
-	cv2.imshow("Image", orig)
+	# cv2.imshow("Image", orig)
 
 	# create a blank mask image similar to the loaded image 
 	maskOrig = image.copy()
 	# extract object mask
 	maskOrig = maskExtraction.extractObjectForegroundMask(maskOrig, box)
-	cv2.imshow('mask', maskOrig) 
+	# cv2.imshow('mask', maskOrig) 
 
 	binImage = binaryMask.mask2binary(maskOrig)
 	cv2.imshow("binmask", binImage)
-	cv2.waitKey(0)
+
+	thickness = [sum(row)/(255*pixelsPerMetric) for row in binImage]
+	thickness = [thickness[index] for index in np.nonzero(thickness)[0]]
+	print(thickness, len(thickness)/pixelsPerMetric)
+
+	cv2.waitKey(0) 

@@ -16,7 +16,7 @@ def findBoundingBox(contour):
   return box
 
 def drawBoundingBoxes(img, box, refWidth, pixelsPerMetric):
-  cv2.drawContours(img, [box.astype("int")], -1, (0, 255, 0), 2)
+  cv2.drawContours(img, [box.astype("int")], -1, (255, 0, 255), 2)
   # draw corners
   for (x, y) in box:
 	  cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)

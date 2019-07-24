@@ -17,3 +17,9 @@ def returnContours(edgedImage):
   # sort the contours from left-to-right
   (cnts, _) = contours.sort_contours(cnts)
   return cnts
+
+def closeImage(edged, numIter):
+  for x in range(0, numIter):
+	  edged = cv2.dilate(edged, None, iterations=1)
+	  edged = cv2.erode(edged, None, iterations=1)
+  return edged
