@@ -12,7 +12,6 @@ import boundingBoxes
 import maskExtraction
 import binaryMask
 import os
-from mrcnn.config import Config
 from mrcnn import model as modellib
 from mrcnn import visualize
 
@@ -50,6 +49,7 @@ for filename in os.listdir('images'):
 			continue
 		mask = r["masks"][:, :, i]
 		color = COLORS[classID][::-1]
+		print('color', color)
 		# visualize the pixel-wise mask of the object
 		image = visualize.apply_mask(image, mask, color, alpha=0.5)
 		(startY, startX, endY, endX) = r["rois"][i]

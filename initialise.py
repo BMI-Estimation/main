@@ -1,5 +1,6 @@
 import random
 import colorsys
+from mrcnn.config import Config
 
 # load the class label names from disk
 CLASS_NAMES = open("coco_labels.txt").read().strip().split("\n")
