@@ -5,7 +5,7 @@ import argparse
 import csv
 import cv2
 import numpy as np
-from initialise import CLASS_NAMES, COLORS, config
+from initialise import CLASS_NAMES, color, config
 import preprocessing
 import edgeDetection
 import boundingBoxes
@@ -32,6 +32,7 @@ for filename in os.listdir('images'):
 		continue
 
 	image = cv2.imread('images/' + filename)
+	clone = image.copy()
 	# convert to rgb image for model
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -41,34 +42,23 @@ for filename in os.listdir('images'):
 
 	# loop over of the detected object's bounding boxes and masks
 	for i in range(0, r["rois"].shape[0]):
-		# extract the class ID and mask for the current detection, then
-		# grab the color to visualize the mask (in BGR format)
+		# extract the class ID and mask
 		classID = r["class_ids"][i]
 		# ignore all non-people objects
 		if CLASS_NAMES[classID] != 'person':
 			continue
+		
 		mask = r["masks"][:, :, i]
-		color = COLORS[classID][::-1]
-		print('color', color)
 		# visualize the pixel-wise mask of the object
 		image = visualize.apply_mask(image, mask, color, alpha=0.5)
-		(startY, startX, endY, endX) = r["rois"][i]
 		# convert the image to BGR for OpenCV use
 		image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-		clone = image.copy()
+		
+		(startY, startX, endY, endX) = r["rois"][i]
 		# extract the ROI of the image
 		roi = clone[startY:endY, startX:endX]
 		visMask = (mask * 255).astype("uint8")
 		# instance = cv2.bitwise_and(roi, roi, mask=visMask)
-		cv2.namedWindow("ROI", cv2.WINDOW_NORMAL)
-		cv2.imshow("ROI", roi)
-		cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
-		cv2.imshow("Mask", visMask)
-		# cv2.namedWindow("Segmented", cv2.WINDOW_NORMAL)
-		# cv2.imshow("Segmented", instance)
-		cv2.namedWindow("Output", cv2.WINDOW_NORMAL)
-		cv2.imshow("Output", image)
-		cv2.waitKey()
 		break
 
 	# # convert image to grayscale, and blur it to remove some noise
@@ -114,5 +104,15 @@ for filename in os.listdir('images'):
 	# 	writer = csv.writer(csvFile)
 	# 	writer.writerows(map(lambda x: [x], thickness))
 	# 	csvFile.write('END\n')
+
+	cv2.namedWindow("ROI", cv2.WINDOW_NORMAL)
+	cv2.imshow("ROI", roi)
+	cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
+	cv2.imshow("Mask", visMask)
+	# cv2.namedWindow("Segmented", cv2.WINDOW_NORMAL)
+	# cv2.imshow("Segmented", instance)
+	cv2.namedWindow("Output", cv2.WINDOW_NORMAL)
+	cv2.imshow("Output", image)
+	cv2.waitKey()
 
 csvFile.close()

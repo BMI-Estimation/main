@@ -1,14 +1,9 @@
-import random
 import colorsys
 from mrcnn.config import Config
 
 # load the class label names from disk
 CLASS_NAMES = open("coco_labels.txt").read().strip().split("\n")
-# generate random colors for each class label
-hsv = [(i / len(CLASS_NAMES), 1, 1.0) for i in range(len(CLASS_NAMES))]
-COLORS = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
-random.seed(42)
-random.shuffle(COLORS)
+color = (0, 255, 0)
 
 class SimpleConfig(Config):
 	# name configuration
