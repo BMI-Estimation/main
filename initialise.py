@@ -1,5 +1,6 @@
 import colorsys
 from mrcnn.config import Config
+from mrcnn import model as modellib
 
 # load the class label names from disk
 CLASS_NAMES = open("coco_labels.txt").read().strip().split("\n")
@@ -16,3 +17,6 @@ class SimpleConfig(Config):
 
 config = SimpleConfig()
 
+print("[INFO] loading Mask R-CNN model...")
+model = modellib.MaskRCNN(mode="inference", config=config, model_dir="logs")
+model.load_weights("mask_rcnn_coco.h5", by_name=True)
