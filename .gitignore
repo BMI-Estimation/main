@@ -105,3 +105,4 @@ venv.bak/
 
 images/
 person.csv
+mask_rcnn_coco.h5
