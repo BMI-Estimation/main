@@ -1,6 +1,7 @@
 import cv2
 from initialise import model, CLASS_NAMES, color
 from mrcnn import visualize
+import numpy as np
 
 def findPersonInPhoto(image, show, showMask):
 	# convert to rgb image for model
@@ -27,18 +28,30 @@ def findPersonInPhoto(image, show, showMask):
 	  # extract the ROI of the image
     roi = clone[startY:endY, startX:endX]
     visMask = (mask * 255).astype("uint8")
+    visMask = visMask[startY:endY, startX:endX]
     # instance = cv2.bitwise_and(roi, roi, mask=visMask)
     break
 
-  if show != 0 or showMask != 0:
-    if show != 0:
+  if show or showMask:
+    if show:
       cv2.namedWindow("ROI", cv2.WINDOW_NORMAL)
       cv2.imshow("ROI", roi)
       # cv2.namedWindow("Segmented", cv2.WINDOW_NORMAL)
       # cv2.imshow("Segmented", instance)
       cv2.namedWindow("Output", cv2.WINDOW_NORMAL)
       cv2.imshow("Output", image)
-    if showMask != 0:
+    if showMask:
       cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
       cv2.imshow("Mask", visMask)
     cv2.waitKey(0)
+
+  return roi, visMask
+
+def personArea(binImage, pixelsPerMetric):
+  metersperpix = 1/pixelsPerMetric
+  areaperpix = metersperpix*metersperpix
+  numPixelsPerRow = [sum(row)/(255) for row in binImage]
+  numPixelsPerRow = [numPixelsPerRow[index] for index in np.nonzero(numPixelsPerRow)[0]]
+  areaPerRow = [areaperpix*numPix for numPix in numPixelsPerRow]
+  totArea = sum(areaPerRow)
+  return totArea

@@ -5,7 +5,7 @@ import boundingBoxes
 import maskExtraction
 import binaryMask
 
-def findReferenceObject(clone, width, show, mask):
+def findReferenceObject(clone, width, show, mask, filename):
   # convert image to grayscale, and blur it to remove some noise
   gray = preprocessing.blurImage(clone)
   # perform edge detection, then rough image closing to complete edges
@@ -28,8 +28,8 @@ def findReferenceObject(clone, width, show, mask):
   maskOrig = maskExtraction.extractObjectForegroundMask(maskOrig, box)
   binImage = binaryMask.mask2binary(maskOrig)
   
-  if show != 0 or mask != 0:
-    if show != 0:
+  if show or mask:
+    if show:
       # cv2.namedWindow("edged", cv2.WINDOW_NORMAL)
       # cv2.imshow("edged", edged)
       # show the output image with bounding box drawn
@@ -37,10 +37,9 @@ def findReferenceObject(clone, width, show, mask):
       cv2.imshow("Box", orig)
       cv2.namedWindow("Refmask", cv2.WINDOW_NORMAL)
       cv2.imshow('Refmask', maskOrig)
-    if mask != 0:
-      cv2.namedWindow("binmask", cv2.WINDOW_NORMAL)
-      cv2.imshow("binmask", binImage)
-    # cv2.waitKey(0)
+    if mask:
+      cv2.namedWindow(filename + " binmask", cv2.WINDOW_NORMAL)
+      cv2.imshow(filename + " binmask", binImage)
 
   return pixelsPerMetric
 
