@@ -47,7 +47,6 @@ def drawBoundingBoxes(img, box, refWidth, pixelsPerMetric):
   # only set pixelspermetric for the first contour that is evaluated (left-most => reference object)
   if pixelsPerMetric is None:
 	  pixelsPerMetric = dB/refWidth
-	  print('pixelspermetric is ', pixelsPerMetric)
 
 	# compute the size of the object
   dimA = dA / pixelsPerMetric
