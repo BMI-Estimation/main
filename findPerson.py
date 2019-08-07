@@ -6,13 +6,11 @@ import numpy as np
 def findPersonInPhoto(images, show, showMask):
 	# convert to rgb image for model
   images = [cv2.cvtColor(image, cv2.COLOR_BGR2RGB) for image in images]
-  # clone = image.copy()
+  listOfMasks = []
   # perform forward pass of the network
   print("[INFO] making predictions with Mask R-CNN...")
-  roisInPictures = model.detect(images, verbose=1)
-  listOfMasks = []
-
-  for r, image in zip(roisInPictures, images):
+  for image in images:
+    r = model.detect([image], verbose=1)[0]
     # loop over of the detected object's bounding boxes and masks
     for i in range(0, r["rois"].shape[0]):
 	  	# extract the class ID and mask
@@ -46,7 +44,7 @@ def findPersonInPhoto(images, show, showMask):
         if showMask:
           cv2.namedWindow("Mask", cv2.WINDOW_NORMAL)
           cv2.imshow("Mask", visMask)
-      
+        cv2.waitKey(0)
       break
   return listOfMasks
 
