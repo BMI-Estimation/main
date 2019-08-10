@@ -71,7 +71,12 @@ def maskThickness(listOfBinMasks, listOfPixelsPerMetric):
     # find mask thicknesses 
     thickness = [sum(row)/(255*listOfPixelsPerMetric[i]) for row in listOfBinMasks[i]]
     thickness = [thickness[index] for index in np.nonzero(thickness)[0]]
-    thickness.insert(0, len(thickness)/listOfPixelsPerMetric[i])
+    height = len(thickness)/listOfPixelsPerMetric[i]
+    # split thickness vector into 8 sections which best describe the human body
+    thickness = np.array_split(thickness, 8)
+    thickness = [max(section) for section in thickness]
+    thickness = [thickness[index] for index in range(1,5)]
+    thickness.insert(0, height)
     # print(thickness)
     area = personArea(listOfBinMasks[i], listOfPixelsPerMetric[i])
 	  # print(area)

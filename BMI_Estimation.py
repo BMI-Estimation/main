@@ -67,10 +67,9 @@ def detect():
 	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage], args)
 	print('[INFO] Extracting Front and Side Dimensions')
 	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
-	width = dimensions[0]
-	depth = dimensions[1]
-	# print('width', width[:2])
-	# print('depth', depth[:2])
+	# width = dimensions[0]
+	# depth = dimensions[1]
+	print(dimensions)
 	cv2.destroyAllWindows()
 
 if args["gen"]: gen()
