@@ -107,3 +107,4 @@ Data.txt
 .idea/
 venv/
 housing.data
+*.h5

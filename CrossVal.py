@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from keras.models import load_model
 # load dataset
 file = "Data.txt"
 #dataframe = pandas.read_csv("housing.data", delim_whitespace=True, header=None)
@@ -39,16 +40,10 @@ def baseline_model():
 # fix random seed for reproducibility
 seed = 7
 np.random.seed(seed)
-# evaluate model with standardized dataset
-estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=0)
-kfold = KFold(n_splits=10, random_state=seed)
-results = cross_val_score(estimator, X, Y, cv=kfold)
-print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
-print(results)
 #classic test split
 X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=0.3)
 Regressor= baseline_model()
-history =Regressor.fit(X_train,Y_train,batch_size=5,epochs=500,verbose=0,validation_data=(X_test,Y_test))
+history =Regressor.fit(X_train,Y_train,batch_size=5,epochs=500,verbose=1,validation_data=(X_test,Y_test))
 #loss
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
@@ -72,6 +67,14 @@ plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4
 plt.xlabel('Measured')
 plt.ylabel('Predicted')
 plt.show()
+# evaluate model with standardized dataset
+estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
+Regressor.model.save('Model.h5')
+estimator.model = load_model('Model.h5')
+kfold = KFold(n_splits=10, random_state=seed)
+results = cross_val_score(estimator, X, Y, cv=kfold)
+print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
+print(results)
 #Cross validation model analysis (loss)
 plt.plot(abs(results))
 plt.title('model loss')
@@ -79,5 +82,23 @@ plt.ylabel('loss')
 plt.xlabel('Fold')
 plt.legend(['train'], loc='upper left')
 plt.show()
-#logarithmic regression
-
+#Revised model
+Y_predict2 = estimator.model.predict(X_test)
+print(Y_predict2)
+plt.scatter(Y_test, Y_predict2)
+plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+plt.xlabel('Measured')
+plt.ylabel('Predicted')
+plt.show()
+from sklearn.model_selection import cross_validate
+rando = cross_validate(estimator, X, Y, cv=kfold,return_estimator=True)
+esto_array = rando['estimator']
+esto = esto_array[9]
+esto.model.save('OMG.h5')
+Final = load_model('OMG.h5')
+y_JESUS = Final.predict(X_test)
+plt.plot(Y_test)
+plt.plot(Y_predict)
+plt.plot(y_JESUS)
+plt.legend(['TEST','1','2'], loc='upper left')
+plt.show()
