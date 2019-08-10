@@ -1,9 +1,8 @@
 import argparse
 import cv2
 import initialise
-from findPerson import findPersonInPhoto as persons
 from findPerson import personArea, maskThickness
-from referenceObject import findReferenceObject as findRef
+from maskExtraction import extractMasks
 import os
 
 ap = argparse.ArgumentParser()
@@ -64,13 +63,15 @@ def detect():
 	print("Detect Mode")
 	fImage = cv2.imread(args['fimg'])
 	sImage = cv2.imread(args['simg'])
-	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage])
+	print('[INFO] Finding Front and Side Masks')
+	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage], args)
+	print('[INFO] Extracting Front and Side Dimensions')
+	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
+	width = dimensions[0]
+	depth = dimensions[1]
+	# print('width', width[:2])
+	# print('depth', depth[:2])
 	cv2.destroyAllWindows()
-
-def extractMasks(listOfImages):
-	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
-	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"], [args['fimg'], args['simg']])
-	return listOfPixelsPerMetric, listOfBinMasks
 
 if args["gen"]: gen()
 else: detect()

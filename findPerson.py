@@ -68,6 +68,7 @@ def personArea(binImage, pixelsPerMetric):
 def maskThickness(listOfBinMasks, listOfPixelsPerMetric):
   thicknessList = []
   for i in range(0, len(listOfPixelsPerMetric)):
+    # find mask thicknesses 
     thickness = [sum(row)/(255*listOfPixelsPerMetric[i]) for row in listOfBinMasks[i]]
     thickness = [thickness[index] for index in np.nonzero(thickness)[0]]
     thickness.insert(0, len(thickness)/listOfPixelsPerMetric[i])
@@ -77,7 +78,6 @@ def maskThickness(listOfBinMasks, listOfPixelsPerMetric):
     thickness.insert(0, area)
 	  # output vector now in the form [area, height, slice1, slice2, sclice3, ...]
     thicknessList.append(thickness)
-  
   return thicknessList
 
 def extractMaskFromROI(img):

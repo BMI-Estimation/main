@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+from findPerson import findPersonInPhoto as persons
+from referenceObject import findReferenceObject as findRef
 
 def extractObjectForegroundMask(img, box):
   (tl, tr, br, bl) = box
@@ -17,3 +19,8 @@ def extractObjectForegroundMask(img, box):
   mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8')
   img = img * mask2[:, :, np.newaxis]
   return img
+
+def extractMasks(listOfImages, args):
+	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
+	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"], [args['fimg'], args['simg']])
+	return listOfPixelsPerMetric, listOfBinMasks
