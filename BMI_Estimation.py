@@ -17,18 +17,14 @@ args = vars(ap.parse_args())
 
 def gen():
 	import csv
-
 	csvFrontFile = open('front.csv', 'w')
 	csvSideFile = open('side.csv', 'w')
-
 	frontWriter = csv.writer(csvFrontFile, delimiter=',')
 	sideWriter = csv.writer(csvSideFile, delimiter=',')
-
 	listOfFrontImages = []
 	listOfFrontImageNames = []
 	listOfSideImages = []
 	listOfSideImageNames = []
-
 	widths = []
 	depths= []
 
@@ -47,18 +43,12 @@ def gen():
 
 	print('[INFO] Extracting Front Masks')
 	listOfFrontBinMasks = persons(listOfFrontImages, args["visualise"], args["mask"])
-
 	print('[INFO] Extracting Side Masks')
 	listOfSideBinMasks = persons(listOfSideImages, args["visualise"], args["mask"])
-
 	print('[INFO] Finding Front Ref. Metric')
-	listOfFrontPixelsPerMetric = findRef(listOfFrontImages, args["width"], args["visualise"], args["mask"],
-																			listOfFrontImageNames)
-
+	listOfFrontPixelsPerMetric = findRef(listOfFrontImages, args["width"], args["visualise"], args["mask"], listOfFrontImageNames)
 	print('[INFO] Finding Side Ref. Metric')
-	listOfSidePixelsPerMetric = findRef(listOfSideImages, args["width"], args["visualise"], args["mask"],
-																			listOfSideImageNames)
-		
+	listOfSidePixelsPerMetric = findRef(listOfSideImages, args["width"], args["visualise"], args["mask"], listOfSideImageNames)
 	print('[INFO] Finding Widths')
 	widths = maskThickness(listOfFrontBinMasks, listOfFrontPixelsPerMetric)
 	print('[INFO] Finding Depths')
@@ -67,7 +57,6 @@ def gen():
 	for width, depth in zip(widths, depths):
 		frontWriter.writerow(width)
 		sideWriter.writerow(depth)
-
 	csvFrontFile.close()
 	csvSideFile.close()
 
@@ -76,11 +65,11 @@ def detect():
 	fImage = cv2.imread(args['fimg'])
 	sImage = cv2.imread(args['simg'])
 	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage])
+	cv2.destroyAllWindows()
 
 def extractMasks(listOfImages):
 	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
-	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"],
-																	[args['fimg'], args['simg']])
+	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"], [args['fimg'], args['simg']])
 	return listOfPixelsPerMetric, listOfBinMasks
 
 if args["gen"]: gen()
