@@ -1,5 +1,4 @@
 import argparse
-import csv
 import cv2
 import initialise
 from findPerson import findPersonInPhoto as persons
@@ -7,15 +6,18 @@ from findPerson import personArea, maskThickness
 from referenceObject import findReferenceObject as findRef
 import os
 
-# construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--width", type=float, required=True, help="width of the left-most object in the image (in meters)")
 ap.add_argument("-v", "--visualise", nargs='?', const=True, type=bool, required=False, default=False, help="show all images etc.")
 ap.add_argument("-m", "--mask", nargs='?', const=True, type=bool, required=False, default=False, help="show masks on images.")
 ap.add_argument("-g", "--gen", nargs='?', const=True, type=bool, required=False, default=False, help="Generate csv.")
+ap.add_argument("-f", "--fimg", required=False, help="Front Input Image.")
+ap.add_argument("-s", "--simg", required=False, help="Side Input Image.")
 args = vars(ap.parse_args())
 
 def gen():
+	import csv
+
 	csvFrontFile = open('front.csv', 'w')
 	csvSideFile = open('side.csv', 'w')
 
@@ -30,7 +32,6 @@ def gen():
 	widths = []
 	depths= []
 
-	# Read in images from folder
 	print('[INFO] Reading Images')
 	for filename in os.listdir('images'):
 		if os.path.isdir('images/' + filename):
@@ -72,6 +73,15 @@ def gen():
 
 def detect():
 	print("Detect Mode")
+	fImage = cv2.imread(args['fimg'])
+	sImage = cv2.imread(args['simg'])
+	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage])
+
+def extractMasks(listOfImages):
+	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
+	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"],
+																	[args['fimg'], args['simg']])
+	return listOfPixelsPerMetric, listOfBinMasks
 
 if args["gen"]: gen()
 else: detect()
