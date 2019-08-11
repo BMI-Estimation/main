@@ -69,8 +69,8 @@ plt.ylabel('Predicted')
 plt.show()
 # evaluate model with standardized dataset
 estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
-Regressor.model.save('Model.h5')
-estimator.model = load_model('Model.h5')
+Regressor.model.save('Classical.h5')
+estimator.model = load_model('Classical.h5')
 kfold = KFold(n_splits=10, random_state=seed)
 results = cross_val_score(estimator, X, Y, cv=kfold)
 print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
@@ -82,23 +82,17 @@ plt.ylabel('loss')
 plt.xlabel('Fold')
 plt.legend(['train'], loc='upper left')
 plt.show()
-#Revised model
-Y_predict2 = estimator.model.predict(X_test)
-print(Y_predict2)
-plt.scatter(Y_test, Y_predict2)
-plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-plt.xlabel('Measured')
-plt.ylabel('Predicted')
-plt.show()
+#Optimal estimator extraction
 from sklearn.model_selection import cross_validate
-rando = cross_validate(estimator, X, Y, cv=kfold,return_estimator=True)
-esto_array = rando['estimator']
-esto = esto_array[9]
-esto.model.save('OMG.h5')
-Final = load_model('OMG.h5')
-y_JESUS = Final.predict(X_test)
+Cross_Val = cross_validate(estimator, X, Y, cv=kfold,return_estimator=True)
+estimator_array = Cross_Val['estimator']
+optimal = estimator_array[9]
+optimal.model.save('Cross_Validation.h5')
+#Assessing optimal model
+Final = load_model('Cross_Validation.h5')
+Y_Cross_Val = Final.predict(X_test)
 plt.plot(Y_test)
 plt.plot(Y_predict)
-plt.plot(y_JESUS)
-plt.legend(['TEST','1','2'], loc='upper left')
+plt.plot(Y_Cross_Val)
+plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
 plt.show()
