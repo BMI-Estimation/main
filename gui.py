@@ -2,9 +2,11 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 from PIL import Image, ImageTk
+import subprocess
 
 def BMI_Prediction(listOfImages):
     print(listOfImages)
+    subprocess.run(["python", "BMI_Estimation.py", "-w", "0.29","-f", "C004_F.jpg", "-s", "C004_S.jpg", "-m"])
     return "BMI Prediction"
 
 class Application(tk.Frame):
@@ -66,7 +68,6 @@ class Application(tk.Frame):
     def start(self):
         bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
         print(bmi)
-
 
     def UseOnlyOneImage(self):
         if UseOnlyFrontImage.get():
