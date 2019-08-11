@@ -122,4 +122,13 @@ Cross_Max = max_error(Y_Unseen,Y_Unseen_Cross)
 print(str(Classical_MSE)+"\t"+str(Cross_MSE))
 print(str(Classical_MAE)+"\t"+ str(Cross_MAE))
 print(str(Classical_Max)+"\t"+str(Cross_Max))
-
+#Model selection
+def overallscore(MSE,MAE,Max):
+    score = (0.35*MSE)+(0.35*MAE)+(0.3*Max)
+    return score
+Classical_Overall = overallscore(Classical_MSE,Classical_MAE,Classical_Max)
+Cross_Overall = overallscore(Cross_MSE,Cross_MAE,Cross_Max)
+if Classical_Overall<Cross_Overall:
+    print("Classical")
+else:
+    print("Cross")
