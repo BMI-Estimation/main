@@ -15,10 +15,14 @@ class Application(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
+        self.InstructionsFrame = tk.Frame(self)
+        self.InstructionsFrame.grid(row=0)
+        self.Instructions = tk.Label(self.InstructionsFrame, text="Please begin by choosing the Front and Side pictures from your computer.\nPictures with an \'F\' is in the file name are considered as the Front Image, and those with an \'S\' in the file name are considered as the Side Image.", wraplength=1000)
+        self.Instructions.grid(row=0)
         self.SelectImageFrame = tk.Frame(self)
-        self.SelectImageFrame.grid(row=0)
+        self.SelectImageFrame.grid(row=1, column=0)
         self.CheckBoxFrame = tk.Frame(self)
-        self.CheckBoxFrame.grid(row=1)
+        self.CheckBoxFrame.grid(row=2, column=0)
 
         self.FrontImageLabel = tk.Label(self.SelectImageFrame, text="Front Image:")
         self.FrontImageLabel.grid(row=0)
@@ -40,24 +44,24 @@ class Application(tk.Frame):
         self.FrontPhotoFrame = tk.Frame(self.SelectImageFrame)
         self.FrontPhotoFrame.grid(row=0, column=3)
         self.FrontPhotoBox = tk.Canvas(self.FrontPhotoFrame)
-        self.FrontPhotoBox.grid(row=0)
+        self.FrontPhotoBox.grid(row=0, column=0)
         self.FrontPhotoLabel = tk.Label(self.FrontPhotoFrame, text="No File Selected.")
-        self.FrontPhotoLabel.grid(row=1)
+        self.FrontPhotoLabel.grid(row=0,column=1)
 
         self.SidePhotoFrame = tk.Frame(self.SelectImageFrame)
         self.SidePhotoFrame.grid(row=1, column=3)
         self.SidePhotoBox = tk.Canvas(self.SidePhotoFrame)
-        self.SidePhotoBox.grid(row=0)
+        self.SidePhotoBox.grid(row=0, column=0)
         self.SidePhotoLabel = tk.Label(self.SidePhotoFrame, text="No File Selected.")
-        self.SidePhotoLabel.grid(row=1)
+        self.SidePhotoLabel.grid(row=0, column=1)
 
         self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImage)
-        self.UseOnlyFrontImageTickBox.grid(row=0)
+        self.UseOnlyFrontImageTickBox.grid(row=0, column=0)
         self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImage)
-        self.UseOnlySideImageTickBox.grid(row=1)
+        self.UseOnlySideImageTickBox.grid(row=0, column=1)
 
         self.StartProgram = tk.Button(self, text="Predict BMI", command=self.start)
-        self.StartProgram.grid(row=2)
+        self.StartProgram.grid(row=3, column=0)
 
     def start(self):
         bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
