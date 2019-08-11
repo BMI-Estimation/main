@@ -130,5 +130,7 @@ Classical_Overall = overallscore(Classical_MSE,Classical_MAE,Classical_Max)
 Cross_Overall = overallscore(Cross_MSE,Cross_MAE,Cross_Max)
 if Classical_Overall<Cross_Overall:
     print("Classical")
+    Regressor.model.save('Final_Model.h5')
 else:
     print("Cross")
+    Final.model.save('Final_Model.h5')
