@@ -5,6 +5,7 @@ from findPerson import findPersonInPhoto as persons
 from findPerson import personArea, maskThickness
 from referenceObject import findReferenceObject as findRef
 import os
+import csv
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--width", type=float, required=True, help="width of the left-most object in the image (in meters)")
@@ -16,7 +17,6 @@ ap.add_argument("-s", "--simg", required=False, help="Side Input Image.")
 args = vars(ap.parse_args())
 
 def gen():
-	import csv
 	csvFrontFile = open('front.csv', 'w')
 	csvSideFile = open('side.csv', 'w')
 	frontWriter = csv.writer(csvFrontFile, delimiter=',')
@@ -71,7 +71,11 @@ def detect():
 	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
 	frontImageDimensions = dimensions[0]
 	sideImageDimensions = dimensions[1]
-	print(dimensions)
+	# csvFile = open('dimensions.csv', 'w')
+	# frontWriter = csv.writer(csvFile, delimiter=',')
+	# frontWriter.writerow(frontImageDimensions)
+	# frontWriter.writerow(sideImageDimensions)
+	# csvFile.close()
 	cv2.destroyAllWindows()
 
 def extractMasks(listOfImages, args):

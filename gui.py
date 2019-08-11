@@ -3,6 +3,7 @@ from tkinter import filedialog
 import os
 from PIL import Image, ImageTk
 import subprocess
+import csv
 
 def BMI_Prediction(listOfImages):
     for image in listOfImages:
@@ -10,9 +11,16 @@ def BMI_Prediction(listOfImages):
             Front = image
         elif 'S' in image:
             Side = image
-    masks = "-m" if ShowMasks.get() else ""
-    pics = "-v" if ShowPics.get() else ""
-    subprocess.run(["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side, masks, pics])
+    arguments = ["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side]
+    if ShowMasks.get():
+        arguments.append("-m")
+    if ShowPics.get():
+        arguments.append("-v")
+    subprocess.run(arguments)
+    csvFile = open('dimensions.csv', 'r')
+    csvReader = csv.reader(csvFile, delimiter=',')
+    dimensions = [row for row in csvReader]
+    print(dimensions)
     return "BMI Prediction"
 
 class Application(tk.Frame):

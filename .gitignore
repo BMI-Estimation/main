@@ -105,7 +105,6 @@ venv.bak/
 
 person.csv
 mask_rcnn_coco.h5
-front.csv
-side.csv
+*.csv
 *.jpg
 *.jpeg
