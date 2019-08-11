@@ -10,7 +10,7 @@ def BMI_Prediction(listOfImages):
             Front = image
         elif 'S' in image:
             Side = image
-    subprocess.run(["python", "BMI_Estimation.py", "-w", "0.29","-f", Front, "-s", Side, "-m"])
+    subprocess.run(["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side])
     return "BMI Prediction"
 
 class Application(tk.Frame):
@@ -25,10 +25,19 @@ class Application(tk.Frame):
         self.InstructionsFrame.grid(row=0)
         self.Instructions = tk.Label(self.InstructionsFrame, text="Please begin by choosing the Front and Side pictures from your computer.\nPictures with an \'F\' is in the file name are considered as the Front Image, and those with an \'S\' in the file name are considered as the Side Image.", wraplength=500)
         self.Instructions.grid(row=0)
+        self.RefObjectMeasurement = tk.Frame(self)
+        self.RefObjectMeasurement.grid(row=1)
         self.SelectImageFrame = tk.Frame(self)
-        self.SelectImageFrame.grid(row=1, column=0)
+        self.SelectImageFrame.grid(row=2, column=0)
         self.CheckBoxFrame = tk.Frame(self)
-        self.CheckBoxFrame.grid(row=2, column=0)
+        self.CheckBoxFrame.grid(row=3, column=0)
+        self.StartProgram = tk.Button(self, text="Predict BMI", command=self.start)
+        self.StartProgram.grid(row=4, column=0)
+
+        self.RefObjectMeasurementLabel = tk.Label(self.RefObjectMeasurement, text="Width of Reference Object in meters: ")
+        self.RefObjectMeasurementLabel.grid(row=0, column=0)
+        self.RefObjectMeasurementEntry = tk.Entry(self.RefObjectMeasurement, textvariable=RefObjectWidth)
+        self.RefObjectMeasurementEntry.grid(row=0, column=1)
 
         self.FrontImageLabel = tk.Label(self.SelectImageFrame, text="Front Image:")
         self.FrontImageLabel.grid(row=0)
@@ -65,9 +74,6 @@ class Application(tk.Frame):
         self.UseOnlyFrontImageTickBox.grid(row=0, column=0)
         self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImage)
         self.UseOnlySideImageTickBox.grid(row=0, column=1)
-
-        self.StartProgram = tk.Button(self, text="Predict BMI", command=self.start)
-        self.StartProgram.grid(row=3, column=0)
 
     def start(self):
         bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
@@ -126,6 +132,7 @@ UseOnlyFrontImage = tk.BooleanVar()
 UseOnlySideImage = tk.BooleanVar()
 FrontFileName = tk.StringVar()
 SideFileName = tk.StringVar()
+RefObjectWidth = tk.StringVar()
 root.title("Digital BMI Estimator")
 app = Application(master=root)
 app.mainloop()

@@ -61,7 +61,7 @@ def gen():
 	csvSideFile.close()
 
 def detect():
-	print("Detect Mode")
+	print("Detect Mode, Arguments: ", args)
 	# save images in root folder
 	fImage = cv2.imread(args['fimg'])
 	sImage = cv2.imread(args['simg'])
