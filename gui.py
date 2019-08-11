@@ -5,8 +5,12 @@ from PIL import Image, ImageTk
 import subprocess
 
 def BMI_Prediction(listOfImages):
-    print(listOfImages)
-    subprocess.run(["python", "BMI_Estimation.py", "-w", "0.29","-f", "C004_F.jpg", "-s", "C004_S.jpg", "-m"])
+    for image in listOfImages:
+        if 'F' in image:
+            Front = image
+        elif 'S' in image:
+            Side = image
+    subprocess.run(["python", "BMI_Estimation.py", "-w", "0.29","-f", Front, "-s", Side, "-m"])
     return "BMI Prediction"
 
 class Application(tk.Frame):
@@ -19,7 +23,7 @@ class Application(tk.Frame):
     def create_widgets(self):
         self.InstructionsFrame = tk.Frame(self)
         self.InstructionsFrame.grid(row=0)
-        self.Instructions = tk.Label(self.InstructionsFrame, text="Please begin by choosing the Front and Side pictures from your computer.\nPictures with an \'F\' is in the file name are considered as the Front Image, and those with an \'S\' in the file name are considered as the Side Image.", wraplength=1000)
+        self.Instructions = tk.Label(self.InstructionsFrame, text="Please begin by choosing the Front and Side pictures from your computer.\nPictures with an \'F\' is in the file name are considered as the Front Image, and those with an \'S\' in the file name are considered as the Side Image.", wraplength=500)
         self.Instructions.grid(row=0)
         self.SelectImageFrame = tk.Frame(self)
         self.SelectImageFrame.grid(row=1, column=0)
@@ -45,17 +49,17 @@ class Application(tk.Frame):
 
         self.FrontPhotoFrame = tk.Frame(self.SelectImageFrame)
         self.FrontPhotoFrame.grid(row=0, column=3)
-        self.FrontPhotoBox = tk.Canvas(self.FrontPhotoFrame)
-        self.FrontPhotoBox.grid(row=0, column=0)
+        self.FrontPhotoBox = tk.Canvas(self.FrontPhotoFrame, width=200)
+        self.FrontPhotoBox.grid(row=0, column=1)
         self.FrontPhotoLabel = tk.Label(self.FrontPhotoFrame, text="No File Selected.")
-        self.FrontPhotoLabel.grid(row=0,column=1)
+        self.FrontPhotoLabel.grid(row=0,column=0)
 
         self.SidePhotoFrame = tk.Frame(self.SelectImageFrame)
         self.SidePhotoFrame.grid(row=1, column=3)
-        self.SidePhotoBox = tk.Canvas(self.SidePhotoFrame)
-        self.SidePhotoBox.grid(row=0, column=0)
+        self.SidePhotoBox = tk.Canvas(self.SidePhotoFrame, width=200)
+        self.SidePhotoBox.grid(row=0, column=1)
         self.SidePhotoLabel = tk.Label(self.SidePhotoFrame, text="No File Selected.")
-        self.SidePhotoLabel.grid(row=0, column=1)
+        self.SidePhotoLabel.grid(row=0, column=0)
 
         self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImage)
         self.UseOnlyFrontImageTickBox.grid(row=0, column=0)
