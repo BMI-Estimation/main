@@ -30,31 +30,29 @@ class Application(tk.Frame):
         self.ChooseSideImageButton["text"] = "Browse Files ..."
         self.ChooseSideImageButton.grid(row=1, column=2)
 
-        self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImageCheckBox)
+        self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImage)
         self.UseOnlyFrontImageTickBox.pack()
-        self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImageCheckBox)
+        self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImage)
         self.UseOnlySideImageTickBox.pack()
 
         self.StartProgram = tk.Button(self)
         self.StartProgram["text"] = "Predict BMI"
         self.StartProgram.pack(side=tk.BOTTOM)
 
-    def UseOnlyOneImageCheckBox(self):
+    def UseOnlyOneImage(self):
         if UseOnlyFrontImage.get():
-            self.SideImageTextBox.config(state=tk.DISABLED)
+            [slave.config(state=tk.DISABLED) for slave in self.SelectImageFrame.grid_slaves() if slave.grid_info()['row']== 1]
             self.UseOnlySideImageTickBox.config(state=tk.DISABLED)
         else:
-            self.SideImageTextBox.config(state=tk.NORMAL)
+            [slave.config(state=tk.NORMAL) for slave in self.SelectImageFrame.grid_slaves() if slave.grid_info()['row']== 1]
             self.UseOnlySideImageTickBox.config(state=tk.NORMAL)
         
         if UseOnlySideImage.get():
-            self.FrontImageTextBox.config(state=tk.DISABLED)
+            [slave.config(state=tk.DISABLED) for slave in self.SelectImageFrame.grid_slaves() if slave.grid_info()['row']== 0]
             self.UseOnlyFrontImageTickBox.config(state=tk.DISABLED)
         else:
-            self.FrontImageTextBox.config(state=tk.NORMAL)
+            [slave.config(state=tk.NORMAL) for slave in self.SelectImageFrame.grid_slaves() if slave.grid_info()['row']== 0]
             self.UseOnlyFrontImageTickBox.config(state=tk.NORMAL)
-
-        # print(UseOnlyFrontImage.get(), UseOnlySideImage.get())
 
 root = tk.Tk()
 UseOnlyFrontImage = tk.BooleanVar()
