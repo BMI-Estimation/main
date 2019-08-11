@@ -37,22 +37,23 @@ class Application(tk.Frame):
 
         self.StartProgram = tk.Button(self)
         self.StartProgram["text"] = "Predict BMI"
-        # self.StartProgram["command"] = self.say_hi
         self.StartProgram.pack(side=tk.BOTTOM)
 
-        # self.quit = tk.Button(self, text="QUIT", fg="red",
-        #                       command=self.master.destroy)
-        # self.quit.pack(side="bottom")
-
-    def say_hi(self):
-        print("hi there, everyone!")
-
     def UseOnlyOneImageCheckBox(self):
-        if UseOnlyFrontImage.get(): self.SideImageTextBox.config(state=tk.DISABLED)
-        else: self.SideImageTextBox.config(state=tk.NORMAL)
+        if UseOnlyFrontImage.get():
+            self.SideImageTextBox.config(state=tk.DISABLED)
+            self.UseOnlySideImageTickBox.config(state=tk.DISABLED)
+        else:
+            self.SideImageTextBox.config(state=tk.NORMAL)
+            self.UseOnlySideImageTickBox.config(state=tk.NORMAL)
         
-        if UseOnlySideImage.get(): self.FrontImageTextBox.config(state=tk.DISABLED)
-        else: self.FrontImageTextBox.config(state=tk.NORMAL)
+        if UseOnlySideImage.get():
+            self.FrontImageTextBox.config(state=tk.DISABLED)
+            self.UseOnlyFrontImageTickBox.config(state=tk.DISABLED)
+        else:
+            self.FrontImageTextBox.config(state=tk.NORMAL)
+            self.UseOnlyFrontImageTickBox.config(state=tk.NORMAL)
+
         # print(UseOnlyFrontImage.get(), UseOnlySideImage.get())
 
 root = tk.Tk()
