@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 from keras.models import load_model
 # load dataset
 file = "Data.txt"
-#dataframe = pandas.read_csv("housing.data", delim_whitespace=True, header=None)
-#dataset = dataframe.values
 heading = ["Height","Weight","BMI"]
 dataframe = pandas.read_csv(file,sep="\t",header=None,names=heading)
 # split into input (X) and output (Y) variables
@@ -27,7 +25,6 @@ scale = MinMaxScaler()
 X=scale.fit_transform(X)
 Y= Y.reshape(-1,1)
 Y= scale.fit_transform(Y)
-print(X[0])
 # define base model
 def baseline_model():
 	# create model
@@ -94,5 +91,23 @@ Y_Cross_Val = Final.predict(X_test)
 plt.plot(Y_test)
 plt.plot(Y_predict)
 plt.plot(Y_Cross_Val)
+plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+plt.show()
+#unseen data tests
+unseen = "Unseen.txt"
+dataframe_2 = pandas.read_csv(unseen,sep="\t",header=None,names=heading)
+# split into input (X) and output (Y) variables
+dataset_2=dataframe_2.values
+X_Unseen = dataset_2[:,0:2]
+Y_Unseen = dataset_2[:,2]
+#normalise data
+X_Unseen=scale.fit_transform(X_Unseen)
+Y_Unseen= Y_Unseen.reshape(-1,1)
+Y_Unseen= scale.fit_transform(Y_Unseen)
+Y_Unseen_Classical = Regressor.predict(X_Unseen)
+Y_Unseen_Cross = Final.predict(X_Unseen)
+plt.plot(Y_Unseen)
+plt.plot(Y_Unseen_Classical)
+plt.plot(Y_Unseen_Cross)
 plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
 plt.show()
