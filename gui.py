@@ -10,7 +10,9 @@ def BMI_Prediction(listOfImages):
             Front = image
         elif 'S' in image:
             Side = image
-    subprocess.run(["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side])
+    masks = "-m" if ShowMasks.get() else ""
+    pics = "-v" if ShowPics.get() else ""
+    subprocess.run(["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side, masks, pics])
     return "BMI Prediction"
 
 class Application(tk.Frame):
@@ -74,6 +76,10 @@ class Application(tk.Frame):
         self.UseOnlyFrontImageTickBox.grid(row=0, column=0)
         self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImage)
         self.UseOnlySideImageTickBox.grid(row=0, column=1)
+        self.ShowMasksTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Show Masks", variable=ShowMasks)
+        self.ShowMasksTickBox.grid(row=0, column=2)
+        self.ShowPicsTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Show Image Segmentation", variable=ShowPics)
+        self.ShowPicsTickBox.grid(row=0, column=3)
 
     def start(self):
         bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
@@ -130,6 +136,8 @@ class Application(tk.Frame):
 root = tk.Tk()
 UseOnlyFrontImage = tk.BooleanVar()
 UseOnlySideImage = tk.BooleanVar()
+ShowMasks = tk.BooleanVar()
+ShowPics = tk.BooleanVar()
 FrontFileName = tk.StringVar()
 SideFileName = tk.StringVar()
 RefObjectWidth = tk.StringVar()
