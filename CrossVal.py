@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
 import pandas
 from keras.models import Sequential
 from keras.layers import Dense
@@ -7,11 +6,14 @@ from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from keras.models import load_model
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import max_error
+
 # load dataset
 file = "Data.txt"
 heading = ["Height","Weight","BMI"]
@@ -35,7 +37,7 @@ def baseline_model():
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse', 'accuracy'])
     return regressor
 # fix random seed for reproducibility
-seed = 7
+seed = 8
 np.random.seed(seed)
 #classic test split
 X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=0.3)
@@ -80,7 +82,6 @@ plt.xlabel('Fold')
 plt.legend(['train'], loc='upper left')
 plt.show()
 #Optimal estimator extraction
-from sklearn.model_selection import cross_validate
 Cross_Val = cross_validate(estimator, X, Y, cv=kfold,return_estimator=True)
 estimator_array = Cross_Val['estimator']
 optimal = estimator_array[9]
@@ -111,3 +112,14 @@ plt.plot(Y_Unseen_Classical)
 plt.plot(Y_Unseen_Cross)
 plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
 plt.show()
+#Performance indicators
+Classical_MSE = mean_squared_error(Y_Unseen,Y_Unseen_Classical)
+Cross_MSE = mean_squared_error(Y_Unseen,Y_Unseen_Cross)
+Classical_MAE = mean_absolute_error(Y_Unseen,Y_Unseen_Classical)
+Cross_MAE = mean_absolute_error(Y_Unseen,Y_Unseen_Cross)
+Classical_Max = max_error(Y_Unseen,Y_Unseen_Classical)
+Cross_Max = max_error(Y_Unseen,Y_Unseen_Cross)
+print(str(Classical_MSE)+"\t"+str(Cross_MSE))
+print(str(Classical_MAE)+"\t"+ str(Cross_MAE))
+print(str(Classical_Max)+"\t"+str(Cross_Max))
+
