@@ -3,6 +3,10 @@ from tkinter import filedialog
 import os
 from PIL import Image, ImageTk
 
+def BMI_Prediction(listOfImages):
+    print(listOfImages)
+    return "BMI Prediction"
+
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -12,9 +16,9 @@ class Application(tk.Frame):
 
     def create_widgets(self):
         self.SelectImageFrame = tk.Frame(self)
-        self.SelectImageFrame.pack()
+        self.SelectImageFrame.grid(row=0)
         self.CheckBoxFrame = tk.Frame(self)
-        self.CheckBoxFrame.pack()
+        self.CheckBoxFrame.grid(row=1)
 
         self.FrontImageLabel = tk.Label(self.SelectImageFrame, text="Front Image:")
         self.FrontImageLabel.grid(row=0)
@@ -35,23 +39,30 @@ class Application(tk.Frame):
 
         self.FrontPhotoFrame = tk.Frame(self.SelectImageFrame)
         self.FrontPhotoFrame.grid(row=0, column=3)
-        self.FrontPhotoLabel = tk.Label(self.FrontPhotoFrame, text="No File Selected.", image="")
-        self.FrontPhotoLabel.pack()
+        self.FrontPhotoBox = tk.Canvas(self.FrontPhotoFrame)
+        self.FrontPhotoBox.grid(row=0)
+        self.FrontPhotoLabel = tk.Label(self.FrontPhotoFrame, text="No File Selected.")
+        self.FrontPhotoLabel.grid(row=1)
+
         self.SidePhotoFrame = tk.Frame(self.SelectImageFrame)
         self.SidePhotoFrame.grid(row=1, column=3)
-        self.SidePhotoLabel = tk.Label(self.SidePhotoFrame, text="No File Selected.", image="")
-        self.SidePhotoLabel.pack(side=tk.BOTTOM)
+        self.SidePhotoBox = tk.Canvas(self.SidePhotoFrame)
+        self.SidePhotoBox.grid(row=0)
+        self.SidePhotoLabel = tk.Label(self.SidePhotoFrame, text="No File Selected.")
+        self.SidePhotoLabel.grid(row=1)
 
         self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImage)
-        self.UseOnlyFrontImageTickBox.pack()
+        self.UseOnlyFrontImageTickBox.grid(row=0)
         self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImage)
-        self.UseOnlySideImageTickBox.pack()
+        self.UseOnlySideImageTickBox.grid(row=1)
 
         self.StartProgram = tk.Button(self, text="Predict BMI", command=self.start)
-        self.StartProgram.pack(side=tk.BOTTOM)
+        self.StartProgram.grid(row=2)
 
     def start(self):
-        print(FrontFileName.get(), SideFileName.get())
+        bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
+        print(bmi)
+
 
     def UseOnlyOneImage(self):
         if UseOnlyFrontImage.get():
@@ -73,29 +84,31 @@ class Application(tk.Frame):
         if fileName != "": return fileName
         else: return "No File Selected."
 
-    def chooseFile(self, textbox, label, is_front):
+    def chooseFile(self, textbox, box, label, is_front):
         fileName = self.returnFileName()
         if fileName == "No File Selected.":
             return
         textbox.insert(tk.INSERT, fileName)
         image = Image.open(fileName)
-        image.thumbnail((100,100))
+        image.thumbnail((200,200))
+        fileName = fileName.split('/')[-1]
         if is_front:
             self.FrontPhoto = ImageTk.PhotoImage(image)
-            label.config(text=fileName, image=self.FrontPhoto)
+            label.config(text=fileName)
+            box.create_image(self.FrontPhotoBox.winfo_width()/2, self.FrontPhotoBox.winfo_height()/2, image=self.FrontPhoto)
         else:
             self.SidePhoto = ImageTk.PhotoImage(image)
-            label.config(text=fileName, image=self.SidePhoto)
-        label.pack(side=tk.BOTTOM)
+            label.config(text=fileName)
+            box.create_image(self.SidePhotoBox.winfo_width()/2, self.SidePhotoBox.winfo_height()/2, image=self.SidePhoto)
     
     def chooseFrontFile(self):
         FrontFileName.set("")
-        self.chooseFile(self.FrontImageTextBox, self.FrontPhotoLabel, True)
+        self.chooseFile(self.FrontImageTextBox, self.FrontPhotoBox, self.FrontPhotoLabel, True)
         return
     
     def chooseSideFile(self):
         SideFileName.set("")
-        self.chooseFile(self.SideImageTextBox, self.SidePhotoLabel, False)
+        self.chooseFile(self.SideImageTextBox, self.SidePhotoBox, self.SidePhotoLabel, False)
         return
         
 
