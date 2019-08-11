@@ -8,36 +8,37 @@ class Application(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        SelectImageFrame = tk.Frame(self)
-        SelectImageFrame.pack()
-        LabelFrame = tk.Frame(SelectImageFrame)
-        LabelFrame.pack(side=tk.LEFT)
-        TextFrame = tk.Frame(SelectImageFrame)
-        TextFrame.pack(side=tk.LEFT)
-        ButtonFrame = tk.Frame(SelectImageFrame)
-        ButtonFrame.pack(side=tk.LEFT)
+        self.SelectImageFrame = tk.Frame(self)
+        self.SelectImageFrame.pack()
+        self.CheckBoxFrame = tk.Frame(self)
+        self.CheckBoxFrame.pack()
 
-        FrontImageLabel = tk.Label(LabelFrame, text="Front Image:")
-        FrontImageLabel.pack()
-        SideImageLabel = tk.Label(LabelFrame, text="Side Image:")
-        SideImageLabel.pack()
+        self.FrontImageLabel = tk.Label(self.SelectImageFrame, text="Front Image:")
+        self.FrontImageLabel.grid(row=0)
+        self.SideImageLabel = tk.Label(self.SelectImageFrame, text="Side Image:")
+        self.SideImageLabel.grid(row=1)
 
-        FrontImageTextBox = tk.Entry(TextFrame, state=tk.DISABLED)
-        FrontImageTextBox.pack()
-        SideImageTextBox = tk.Entry(TextFrame, state=tk.DISABLED)
-        SideImageTextBox.pack()
+        self.FrontImageTextBox = tk.Entry(self.SelectImageFrame)
+        self.FrontImageTextBox.grid(row=0, column=1)
+        self.SideImageTextBox = tk.Entry(self.SelectImageFrame)
+        self.SideImageTextBox.grid(row=1, column=1)
 
-        ChooseFrontImageButton = tk.Button(ButtonFrame)
-        ChooseFrontImageButton["text"] = "Browse Files ..."
-        ChooseFrontImageButton.pack()
-        ChooseSideImageButton = tk.Button(ButtonFrame)
-        ChooseSideImageButton["text"] = "Browse Files ..."
-        ChooseSideImageButton.pack()
+        self.ChooseFrontImageButton = tk.Button(self.SelectImageFrame)
+        self.ChooseFrontImageButton["text"] = "Browse Files ..."
+        self.ChooseFrontImageButton.grid(row=0, column=2)
+        self.ChooseSideImageButton = tk.Button(self.SelectImageFrame)
+        self.ChooseSideImageButton["text"] = "Browse Files ..."
+        self.ChooseSideImageButton.grid(row=1, column=2)
 
-        self.hi_there = tk.Button(self)
-        self.hi_there["text"] = "Open Images"
-        # self.hi_there["command"] = self.say_hi
-        self.hi_there.pack(side=tk.BOTTOM)
+        self.UseOnlyFrontImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Front Image", variable=UseOnlyFrontImage, command=self.UseOnlyOneImageCheckBox)
+        self.UseOnlyFrontImageTickBox.pack()
+        self.UseOnlySideImageTickBox = tk.Checkbutton(self.CheckBoxFrame, text="Only Use Side Image", variable=UseOnlySideImage, command=self.UseOnlyOneImageCheckBox)
+        self.UseOnlySideImageTickBox.pack()
+
+        self.StartProgram = tk.Button(self)
+        self.StartProgram["text"] = "Predict BMI"
+        # self.StartProgram["command"] = self.say_hi
+        self.StartProgram.pack(side=tk.BOTTOM)
 
         # self.quit = tk.Button(self, text="QUIT", fg="red",
         #                       command=self.master.destroy)
@@ -46,7 +47,17 @@ class Application(tk.Frame):
     def say_hi(self):
         print("hi there, everyone!")
 
+    def UseOnlyOneImageCheckBox(self):
+        if UseOnlyFrontImage.get(): self.SideImageTextBox.config(state=tk.DISABLED)
+        else: self.SideImageTextBox.config(state=tk.NORMAL)
+        
+        if UseOnlySideImage.get(): self.FrontImageTextBox.config(state=tk.DISABLED)
+        else: self.FrontImageTextBox.config(state=tk.NORMAL)
+        # print(UseOnlyFrontImage.get(), UseOnlySideImage.get())
+
 root = tk.Tk()
+UseOnlyFrontImage = tk.BooleanVar()
+UseOnlySideImage = tk.BooleanVar()
 root.title("Digital BMI Estimator")
 app = Application(master=root)
 app.mainloop()
