@@ -17,8 +17,8 @@ ap.add_argument("-s", "--simg", required=False, help="Side Input Image.")
 args = vars(ap.parse_args())
 
 def gen():
-	csvFrontFile = open('front.csv', 'w')
-	csvSideFile = open('side.csv', 'w')
+	csvFrontFile = open('front.csv', 'w', newline='')
+	csvSideFile = open('side.csv', 'w', newline='')
 	frontWriter = csv.writer(csvFrontFile, delimiter=',')
 	sideWriter = csv.writer(csvSideFile, delimiter=',')
 	listOfFrontImages = []
@@ -71,11 +71,11 @@ def detect():
 	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
 	frontImageDimensions = dimensions[0]
 	sideImageDimensions = dimensions[1]
-	# csvFile = open('dimensions.csv', 'w')
-	# frontWriter = csv.writer(csvFile, delimiter=',')
-	# frontWriter.writerow(frontImageDimensions)
-	# frontWriter.writerow(sideImageDimensions)
-	# csvFile.close()
+	csvFile = open('dimensions.csv', 'w', newline='')
+	frontWriter = csv.writer(csvFile, delimiter=',')
+	frontWriter.writerow(frontImageDimensions)
+	frontWriter.writerow(sideImageDimensions)
+	csvFile.close()
 	cv2.destroyAllWindows()
 
 def extractMasks(listOfImages, args):

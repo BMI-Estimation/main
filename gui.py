@@ -20,7 +20,9 @@ def BMI_Prediction(listOfImages):
     csvFile = open('dimensions.csv', 'r')
     csvReader = csv.reader(csvFile, delimiter=',')
     dimensions = [row for row in csvReader]
+    csvFile.close()
     print(dimensions)
+
     return "BMI Prediction"
 
 class Application(tk.Frame):
