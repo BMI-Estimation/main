@@ -103,6 +103,12 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+
+.idea/
+venv/
+housing.data
+*.h5
+
 person.csv
 mask_rcnn_coco.h5
 *.csv
