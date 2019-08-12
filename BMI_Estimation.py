@@ -1,9 +1,11 @@
 import argparse
 import cv2
 import initialise
+from findPerson import findPersonInPhoto as persons
 from findPerson import personArea, maskThickness
-from maskExtraction import extractMasks
+from referenceObject import findReferenceObject as findRef
 import os
+import csv
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--width", type=float, required=True, help="width of the left-most object in the image (in meters)")
@@ -15,9 +17,8 @@ ap.add_argument("-s", "--simg", required=False, help="Side Input Image.")
 args = vars(ap.parse_args())
 
 def gen():
-	import csv
-	csvFrontFile = open('front.csv', 'w')
-	csvSideFile = open('side.csv', 'w')
+	csvFrontFile = open('front.csv', 'w', newline='')
+	csvSideFile = open('side.csv', 'w', newline='')
 	frontWriter = csv.writer(csvFrontFile, delimiter=',')
 	sideWriter = csv.writer(csvSideFile, delimiter=',')
 	listOfFrontImages = []
@@ -60,7 +61,8 @@ def gen():
 	csvSideFile.close()
 
 def detect():
-	print("Detect Mode")
+	print("Detect Mode, Arguments: ", args)
+	# save images in root folder
 	fImage = cv2.imread(args['fimg'])
 	sImage = cv2.imread(args['simg'])
 	print('[INFO] Finding Front and Side Masks')
@@ -69,8 +71,17 @@ def detect():
 	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
 	frontImageDimensions = dimensions[0]
 	sideImageDimensions = dimensions[1]
-	print(dimensions)
+	csvFile = open('dimensions.csv', 'w', newline='')
+	frontWriter = csv.writer(csvFile, delimiter=',')
+	frontWriter.writerow(frontImageDimensions)
+	frontWriter.writerow(sideImageDimensions)
+	csvFile.close()
 	cv2.destroyAllWindows()
+
+def extractMasks(listOfImages, args):
+	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
+	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"], [args['fimg'], args['simg']])
+	return listOfPixelsPerMetric, listOfBinMasks
 
 if args["gen"]: gen()
 else: detect()

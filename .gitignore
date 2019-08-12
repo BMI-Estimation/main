@@ -103,10 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-images/
 person.csv
 mask_rcnn_coco.h5
-front.csv
-side.csv
+*.csv
 *.jpg
 *.jpeg
