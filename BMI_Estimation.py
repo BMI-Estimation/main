@@ -1,14 +1,13 @@
-import cv2
-import initialise
 from findPerson import findPersonInPhoto as persons
 from findPerson import personArea, maskThickness
 from referenceObject import findReferenceObject as findRef
-import os
+import cv2
 
 def gen():
 	import argparse
 	import csv
-
+	import os
+	
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-w", "--width", type=float, required=True, help="width of the left-most object in the image (in meters)")
 	ap.add_argument("-v", "--visualise", nargs='?', const=True, type=bool, required=False, default=False, help="show all images etc.")

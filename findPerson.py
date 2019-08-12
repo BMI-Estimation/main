@@ -2,7 +2,7 @@ import cv2
 from initialise import model, CLASS_NAMES, color
 from mrcnn import visualize
 import numpy as np
-import binaryMask
+from binaryMask import mask2binary
 
 def findPersonInPhoto(images, show, showMask):
 	# convert to rgb image for model
@@ -98,5 +98,5 @@ def extractMaskFromROI(img):
   cv2.grabCut(img, mask, rectangle, backgroundModel, foregroundModel, 3, cv2.GC_INIT_WITH_RECT) 
   mask2 = np.where((mask == 2)|(mask == 0), 0, 1).astype('uint8')
   img = img * mask2[:, :, np.newaxis]
-  img = binaryMask.mask2binary(img)
+  img = mask2binary(img)
   return img

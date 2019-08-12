@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
-import edgeDetection
-import boundingBoxes
+from edgeDetection import closeImage, returnContours
 
 def mask2binary(img):
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -11,8 +10,8 @@ def mask2binary(img):
 
 def findBinaryImageEdges(img):
   edged = cv2.Canny(img, 100, 110)
-  edged = edgeDetection.closeImage(edged, 100)
-  contours = edgeDetection.returnContours(edged)
+  edged = closeImage(edged, 100)
+  contours = returnContours(edged)
   contours = sorted(contours, key=lambda x: cv2.contourArea(x))
   return edged, contours[-1]
 

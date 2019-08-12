@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
-import os
+from os import getcwd
 from PIL import Image, ImageTk
-import BMI_Estimation
+from BMI_Estimation import detect
 
 def Image_Segmentation_Data_Extraction(listOfImages):
     for image in listOfImages:
@@ -21,7 +21,7 @@ def Image_Segmentation_Data_Extraction(listOfImages):
     if ShowPics.get(): arguments["visualise"] = True
     else: arguments["visualise"] = False
 
-    frontImageDimensions, sideImageDimensions = BMI_Estimation.detect(arguments)
+    frontImageDimensions, sideImageDimensions = detect(arguments)
     return frontImageDimensions, sideImageDimensions
 
 def Predict_BMI(frontImageDimensions, sideImageDimensions):
@@ -117,7 +117,7 @@ class Application(tk.Frame):
             self.UseOnlyFrontImageTickBox.config(state=tk.NORMAL)
     
     def returnFileName(self):
-        fileName = filedialog.askopenfilename(initialdir = os.getcwd(), title = "Select file",filetypes = (("jpg files","*.jpg"), ("jpeg files","*.jpeg"),("all files","*.*")))
+        fileName = filedialog.askopenfilename(initialdir = getcwd(), title = "Select file",filetypes = (("jpg files","*.jpg"), ("jpeg files","*.jpeg"),("all files","*.*")))
         if fileName != "": return fileName
         else: return "No File Selected."
 

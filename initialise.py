@@ -1,4 +1,3 @@
-import colorsys
 from mrcnn.config import Config
 from mrcnn import model as modellib
 
