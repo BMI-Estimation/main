@@ -13,7 +13,6 @@ def gen():
 	ap.add_argument("-w", "--width", type=float, required=True, help="width of the left-most object in the image (in meters)")
 	ap.add_argument("-v", "--visualise", nargs='?', const=True, type=bool, required=False, default=False, help="show all images etc.")
 	ap.add_argument("-m", "--mask", nargs='?', const=True, type=bool, required=False, default=False, help="show masks on images.")
-	ap.add_argument("-g", "--gen", nargs='?', const=True, type=bool, required=False, default=False, help="Generate csv.")
 	args = vars(ap.parse_args())
 
 	csvFrontFile = open('front.csv', 'w', newline='')

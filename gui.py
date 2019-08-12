@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 from PIL import Image, ImageTk
-import subprocess
-import csv
 import BMI_Estimation
 
 def Image_Segmentation_Data_Extraction(listOfImages):
@@ -24,7 +22,6 @@ def Image_Segmentation_Data_Extraction(listOfImages):
     else: arguments["visualise"] = False
 
     frontImageDimensions, sideImageDimensions = BMI_Estimation.detect(arguments)
-    # print(frontImageDimensions, sideImageDimensions)
     return frontImageDimensions, sideImageDimensions
 
 def Predict_BMI(frontImageDimensions, sideImageDimensions):
