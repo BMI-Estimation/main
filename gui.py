@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import subprocess
 import csv
 
-def BMI_Prediction(listOfImages):
+def Image_Segmentation_Data_Extraction(listOfImages):
     for image in listOfImages:
         if 'F' in image:
             Front = image
@@ -22,8 +22,10 @@ def BMI_Prediction(listOfImages):
     dimensions = [row for row in csvReader]
     csvFile.close()
     print(dimensions)
+    return
 
-    return "BMI Prediction"
+def Predict_BMI():
+    return
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -92,8 +94,10 @@ class Application(tk.Frame):
         self.ShowPicsTickBox.grid(row=0, column=3)
 
     def start(self):
-        bmi = BMI_Prediction([FrontFileName.get(), SideFileName.get()])
-        print(bmi)
+        Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
+        print('[INFO] Image Segmentation Completed')
+        Predict_BMI()
+        
 
     def UseOnlyOneImage(self):
         if UseOnlyFrontImage.get():
