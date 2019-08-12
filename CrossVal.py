@@ -24,9 +24,9 @@ X = dataset[:,0:2]
 Y = dataset[:,2]
 #normalise data
 scale = MinMaxScaler()
-X=scale.fit_transform(X)
+#=scale.fit_transform(X)
 Y= Y.reshape(-1,1)
-Y= scale.fit_transform(Y)
+#Y= scale.fit_transform(Y)
 #unseen data
 unseen = "Unseen.txt"
 dataframe_2 = pandas.read_csv(unseen, sep="\t", header=None, names=heading)
@@ -35,9 +35,9 @@ dataset_2 = dataframe_2.values
 X_Unseen = dataset_2[:, 0:2]
 Y_Unseen = dataset_2[:, 2]
 # normalise data
-X_Unseen = scale.fit_transform(X_Unseen)
+#X_Unseen = scale.fit_transform(X_Unseen)
 Y_Unseen = Y_Unseen.reshape(-1, 1)
-Y_Unseen = scale.fit_transform(Y_Unseen)
+#Y_Unseen = scale.fit_transform(Y_Unseen)
 # define base model
 def baseline_model():
 	# create model
@@ -47,12 +47,15 @@ def baseline_model():
     regressor.add(Dense(units=1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse', 'accuracy'])
     return regressor
-# fix random seed for reproducibility
+#Get current best model score
+score_file = pandas.read_csv("Lowest_Score.txt",sep=" ",header=None,names=None)
+Lowest_score_data = score_file.values
+Lowest_score_array = Lowest_score_data[:1]
+lowest_score = Lowest_score_array.item(0)
 Regressor= baseline_model()
-lowest_score = 5
 progress = []
 #finding optimal model
-for x in range(2):
+for x in range(7):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
@@ -111,11 +114,11 @@ for x in range(2):
     # unseen data tests
     Y_Unseen_Classical = Regressor.predict(X_Unseen)
     Y_Unseen_Cross = Final.predict(X_Unseen)
-    plt.plot(Y_Unseen)
-    plt.plot(Y_Unseen_Classical)
-    plt.plot(Y_Unseen_Cross)
-    plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-    plt.show()
+    # plt.plot(Y_Unseen)
+    # plt.plot(Y_Unseen_Classical)
+    # plt.plot(Y_Unseen_Cross)
+    # plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+    # plt.show()
     # Performance indicators
     Classical_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Classical)
     Cross_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Cross)
@@ -151,3 +154,13 @@ for x in range(2):
             print("new model "+ str(lowest_score))
             progress.append(lowest_score)
 print(progress)
+Proposed_Model = load_model('Final_Model.h5')
+Y_Proposed = Proposed_Model.predict(X_Unseen)
+plt.plot(Y_Unseen)
+plt.plot(Y_Proposed)
+plt.legend(['Actual', 'Model'], loc='upper left')
+plt.show()
+score_file = open("Lowest_Score.txt","w")
+score_file.write(str(lowest_score))
+score_file.close()
+print(lowest_score)
