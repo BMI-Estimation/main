@@ -4,6 +4,7 @@ import os
 from PIL import Image, ImageTk
 import subprocess
 import csv
+import BMI_Estimation
 
 def Image_Segmentation_Data_Extraction(listOfImages):
     for image in listOfImages:
@@ -11,20 +12,23 @@ def Image_Segmentation_Data_Extraction(listOfImages):
             Front = image
         elif 'S' in image:
             Side = image
-    arguments = ["python", "BMI_Estimation.py", "-w", RefObjectWidth.get(), "-f", Front, "-s", Side]
-    if ShowMasks.get():
-        arguments.append("-m")
-    if ShowPics.get():
-        arguments.append("-v")
-    subprocess.run(arguments)
-    csvFile = open('dimensions.csv', 'r')
-    csvReader = csv.reader(csvFile, delimiter=',')
-    dimensions = [row for row in csvReader]
-    csvFile.close()
-    print(dimensions)
-    return
+    arguments = {
+                    "width": RefObjectWidth.get(),
+                    "fimg": Front,
+                    "simg": Side
+                }
+    if ShowMasks.get(): arguments["mask"] = True
+    else: arguments["mask"] = False
 
-def Predict_BMI():
+    if ShowPics.get(): arguments["visualise"] = True
+    else: arguments["visualise"] = False
+
+    frontImageDimensions, sideImageDimensions = BMI_Estimation.detect(arguments)
+    # print(frontImageDimensions, sideImageDimensions)
+    return frontImageDimensions, sideImageDimensions
+
+def Predict_BMI(frontImageDimensions, sideImageDimensions):
+    print(frontImageDimensions, sideImageDimensions)
     return
 
 class Application(tk.Frame):
@@ -94,9 +98,10 @@ class Application(tk.Frame):
         self.ShowPicsTickBox.grid(row=0, column=3)
 
     def start(self):
-        Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
+        frontImageDimensions, sideImageDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
         print('[INFO] Image Segmentation Completed')
-        Predict_BMI()
+        Predict_BMI(frontImageDimensions, sideImageDimensions)
+        print('[INFO] BMI Prediction Completed')
         
 
     def UseOnlyOneImage(self):
@@ -154,7 +159,7 @@ ShowMasks = tk.BooleanVar()
 ShowPics = tk.BooleanVar()
 FrontFileName = tk.StringVar()
 SideFileName = tk.StringVar()
-RefObjectWidth = tk.StringVar()
+RefObjectWidth = tk.DoubleVar()
 root.title("Digital BMI Estimator")
 app = Application(master=root)
 app.mainloop()
