@@ -29,33 +29,31 @@ def gen():
 	for filename in os.listdir('images'):
 		if os.path.isdir('images/' + filename):
 			continue
+		name = 'images/' + filename
+		if 'F' in filename:
+			listOfFrontImageNames.append(name)
+		elif 'S' in filename:
+			listOfSideImageNames.append(name)
 
-		image = cv2.imread('images/' + filename)
-		if 'Front' in filename or 'F' in filename:
-			listOfFrontImages.append(image)
-			listOfFrontImageNames.append(filename)
-		elif 'Side' in filename or 'S' in filename:
-			listOfSideImages.append(image)
-			listOfSideImageNames.append(filename)
-
-	print('[INFO] Extracting Front Masks')
-	listOfFrontBinMasks = persons(listOfFrontImages, args["visualise"], args["mask"])
-	print('[INFO] Extracting Side Masks')
-	listOfSideBinMasks = persons(listOfSideImages, args["visualise"], args["mask"])
-	print('[INFO] Finding Front Ref. Metric')
-	listOfFrontPixelsPerMetric = findRef(listOfFrontImages, args["width"], args["visualise"], args["mask"], listOfFrontImageNames)
-	print('[INFO] Finding Side Ref. Metric')
-	listOfSidePixelsPerMetric = findRef(listOfSideImages, args["width"], args["visualise"], args["mask"], listOfSideImageNames)
-	print('[INFO] Finding Widths')
-	widths = maskThickness(listOfFrontBinMasks, listOfFrontPixelsPerMetric)
-	print('[INFO] Finding Depths')
-	depths = maskThickness(listOfSideBinMasks, listOfSidePixelsPerMetric)
-
-	for width, depth in zip(widths, depths):
-		frontWriter.writerow(width)
-		sideWriter.writerow(depth)
+	print('[INFO] Extracting Widths From Front Image')
+	width = extractDimensions(listOfFrontImageNames, args, frontWriter)
 	csvFrontFile.close()
+	print('[INFO] Widths Extracted')
+
+	print('[INFO] Extracting Depths From Side Image')
+	depth = extractDimensions(listOfSideImageNames, args, sideWriter)
 	csvSideFile.close()
+	print('[INFO] Depths Extracted')
+
+def extractDimensions(listOfNames, args, writer):
+	for name in listOfNames:
+		image = cv2.imread(name)
+		BinMask = persons(image, args["visualise"], args["mask"])
+		PixelsPerMetric = findRef(image, args["width"], args["visualise"], args["mask"])
+		dimension = maskThickness(BinMask, PixelsPerMetric)
+		writer.writerow(dimension)
+		print('[INFO] Dimension Extracted from ', name)
+	return
 
 def detect(args):
 	print("Detect Mode, Arguments: ", args)
