@@ -13,9 +13,22 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
+# Decide on model to train
+view = "side"
+if view == "side":
+    file = "Side_Model.csv"
+    Final_Model_File = "Final_Model_Side.h5"
+    Low_Score_File = "Lowest_Score_Side.txt"
+    Classic_Model_File = 'Classical_Side.h5'
+    Cross_Model_File = 'Cross_Side.h5'
+else:
+    file = "Front_Model.csv"
+    Final_Model_File = "Final_Model_Front.h5"
+    Low_Score_File = "Lowest_Score_Front.txt"
+    Classic_Model_File = 'Classical_Front.h5'
+    Cross_Model_File = 'Cross_Front.h5'
 # load dataset inputs
-side = "Side_Model.csv"
-dataframe_traning_inputs = open(side, 'r')
+dataframe_traning_inputs = open(file, 'r')
 reader = csv.reader(dataframe_traning_inputs, delimiter=",")
 Input_parameters = [[int(entry) for entry in row] for row in reader]
 Input_parameters = np.asarray(Input_parameters)
@@ -31,22 +44,6 @@ Y = BMI
 print(X)
 Y= Y.reshape(-1,1)
 print(Y)
-# #unseen input dataset
-# unseen_inputs = "Unseen_Inputs.csv"
-# dataframe_unseen_inputs =open(unseen_inputs, 'r')
-# reader = csv.reader(dataframe_unseen_inputs, delimiter=",")
-# Unseen_Input_Parameters = [[int(entry) for entry in row] for row in reader]
-# Unseen_Input_Parameters = np.asarray(Unseen_Input_Parameters)
-# #unseen BMI dataset
-# unseen_BMI_file = "Unseen_BMI.csv"
-# dataframe_unseen_BMI =open(unseen_BMI_file, 'r')
-# reader = csv.reader(dataframe_unseen_BMI, delimiter=",")
-# Unseen_BMI = [[int(entry) for entry in row] for row in reader]
-# Unseen_BMI = np.asarray(Unseen_BMI)
-# # split into input (X) and output (Y) variables
-# X_Unseen = Unseen_Input_Parameters
-# Y_Unseen = Unseen_BMI
-# Y_Unseen = Y_Unseen.reshape(-1, 1)
 # define base model
 def baseline_model():
 	# create model
@@ -57,7 +54,7 @@ def baseline_model():
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
     return regressor
 #Get current best model score
-score_file = pandas.read_csv("Lowest_Score_Side.txt",sep=" ",header=None,names=None)
+score_file = pandas.read_csv(Low_Score_File,sep=" ",header=None,names=None)
 Lowest_score_data = score_file.values
 Lowest_score_array = Lowest_score_data[:1]
 lowest_score = Lowest_score_array.item(0)
@@ -99,8 +96,8 @@ for x in range(1):
     plt.show()
     #evaluate model with dataset
     estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
-    Regressor.model.save('Classical_Side.h5')
-    estimator.model = load_model('Classical_Side.h5')
+    Regressor.model.save(Classic_Model_File)
+    estimator.model = load_model(Classic_Model_File)
     kfold = KFold(n_splits=10, random_state=x)
     results = cross_val_score(estimator, X, Y, cv=kfold)
     print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
@@ -116,9 +113,9 @@ for x in range(1):
     Cross_Val = cross_validate(estimator, X, Y, cv=kfold, return_estimator=True)
     estimator_array = Cross_Val['estimator']
     Cross_val_estimator = estimator_array[9]
-    Cross_val_estimator.model.save('Cross_Validation_Side.h5')
+    Cross_val_estimator.model.save(Cross_Model_File)
     # Assessing optimal model
-    Final = load_model('Cross_Validation_Side.h5')
+    Final = load_model(Cross_Model_File)
     Y_Cross_Val = Final.predict(X_test)
     plt.plot(Y_test)
     plt.plot(Y_Classic)
@@ -156,25 +153,25 @@ for x in range(1):
     if Classical_Overall < Cross_Overall:
         print("Classical")
         if Classical_Overall<lowest_score:
-            Regressor.model.save('Final_Model_Side.h5')
+            Regressor.model.save(Final_Model_File)
             lowest_score=Classical_Overall
             print("new model "+ str(lowest_score))
             progress.append(lowest_score)
     else:
         print("Cross")
         if Cross_Overall<lowest_score:
-            Final.model.save('Final_Model_Side.h5')
+            Final.model.save(Final_Model_File)
             lowest_score = Cross_Overall
             print("new model "+ str(lowest_score))
             progress.append(lowest_score)
 print(progress)
-Proposed_Model = load_model('Final_Model_Side.h5')
+Proposed_Model = load_model(Final_Model_File)
 Y_Proposed = Proposed_Model.predict(X_Unseen)
 plt.plot(Y_Unseen)
 plt.plot(Y_Proposed)
 plt.legend(['Actual', 'Model'], loc='upper left')
 plt.show()
-score_file = open("Lowest_Score_Side.txt","w")
+score_file = open(Low_Score_File,"w")
 score_file.write(str(lowest_score))
 score_file.close()
 print(lowest_score)
