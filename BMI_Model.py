@@ -22,21 +22,33 @@ Final_BMI_Model = 'Final_Model_BMI.h5'
 Low_Score_File = 'Lowest_Score_BMI.txt'
 Classic_Model_File = 'Classical_BMI.h5'
 Cross_Model_File = 'Cross_BMI.h5'
+
 # load dataset inputs
 dataframe_traning_Side = open(Side_input_file, 'r')
 reader = csv.reader(dataframe_traning_Side, delimiter=",")
-Input_parameters_Side = [[int(entry) for entry in row] for row in reader]
-Input_parameters_Side = np.asarray(Input_parameters_Side)
+Input_parameters_Side = [[float(entry) for entry in row] for row in reader]
+badDataIndex = [index for index, row in enumerate(Input_parameters_Side) if row[1] > 2.5]
+
 dataframe_traning_Front = open(Front_input_file, 'r')
 reader = csv.reader(dataframe_traning_Front, delimiter=",")
-Input_parameters_Front = [[int(entry) for entry in row] for row in reader]
+Input_parameters_Front = [[float(entry) for entry in row] for row in reader]
+[badDataIndex.append(index) for index, row in enumerate(Input_parameters_Front) if row[1] > 2.5 and index not in badDataIndex]
+
+Input_parameters_Side = [row for index, row in enumerate(Input_parameters_Side) if index not in badDataIndex]
+Input_parameters_Side = np.asarray(Input_parameters_Side)
+Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front) if index not in badDataIndex]
 Input_parameters_Front = np.asarray(Input_parameters_Front)
+
 #load dataset BMI
 BMI_file = "BMI.csv"
 dataframe_traning_outputs = open(BMI_file, 'r')
 reader = csv.reader(dataframe_traning_outputs, delimiter=",")
-BMI = [[int(entry) for entry in row] for row in reader]
+BMI = [[float(1) for entry in row] for row in reader]
+BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
 BMI = np.asarray(BMI)
+print('F', Input_parameters_Front)
+print('S', Input_parameters_Side)
+print('FL', len(Input_parameters_Front), 'SL', len(Input_parameters_Side), 'BL', len(BMI))
 #Load front and side models
 Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
