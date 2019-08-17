@@ -1,6 +1,8 @@
 import argparse
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--number", type=int, required=True, help="Number of iterations.")
+ap.add_argument("-b", "--batch", type=int, required=True, help="Batch Size.")
+ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
+ap.add_argument("-n", "--number", type=int, required=True, help="Number of training iterations.")
 ap.add_argument("-f", "--front", nargs='?', const=True, type=bool, required=False, default=False, help="Train Front Model.")
 ap.add_argument("-s", "--side", nargs='?', const=True, type=bool, required=False, default=False, help="Train Side Model.")
 ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
@@ -89,8 +91,10 @@ Lowest_score_data = score_file.values
 Lowest_score_array = Lowest_score_data[:1]
 lowest_score = Lowest_score_array.item(0)
 
+batch = args['batch']
+epochs = args['epochs']
 Classic_Model = baseline_model()
-Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=500, batch_size=5, verbose=1)
+Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=epochs, batch_size=batch, verbose=1)
 progress = []
 best_scores = {}
 
@@ -115,7 +119,7 @@ for x in range(args["number"]):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
-    history = Classic_Model.fit(X_train, Y_train, batch_size=5, epochs=500, verbose=1, validation_data=(X_test, Y_test))
+    history = Classic_Model.fit(X_train, Y_train, batch_size=batch, epochs=epochs, verbose=1, validation_data=(X_test, Y_test))
     Y_Classic = Classic_Model.predict(X_test)
     Classic_Model.model.save(Classic_Model_File)
 
@@ -175,6 +179,8 @@ for x in range(args["number"]):
         best_cross_score = Cross_Overall
 
     infoFile.write(str(best_scores))
+    infoFile.write(str('\n'))
+    infoFile.write(str({'Batch': batch, 'Epochs': epochs}))
 
     if args["visualize"]:
         # Cross validation model analysis (loss)
