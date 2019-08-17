@@ -54,9 +54,9 @@ def overallscore(MSE, MAE, Max):
 def baseline_model():
 	# create model
     regressor = Sequential()
-    regressor.add(Dense(units=7, input_dim=6, activation="relu"))
-    regressor.add(Dense(units=7, activation="relu"))
-    regressor.add(Dense(units=1, activation="linear"))
+    regressor.add(Dense(20, input_dim=6, activation="relu"))
+    regressor.add(Dense(4, activation="relu"))
+    regressor.add(Dense(1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
     return regressor
 
@@ -147,20 +147,20 @@ for x in range(args["number"]):
             Classic_Model.model.save(Final_Model_File)
             lowest_score=Classical_Overall
             print("new model "+ str(lowest_score))
-            progress.append([lowest_score, 'Classical'])
+            progress.append([Classical_MAE, 'Classical'])
     else:
         print("Cross")
         if Cross_Overall<lowest_score:
             Cross_Val_Model.model.save(Final_Model_File)
             lowest_score = Cross_Overall
             print("new model "+ str(lowest_score))
-            progress.append([lowest_score, 'Cross'])
+            progress.append([Cross_MAE, 'Cross'])
 
-    if best_class_score < Classical_Overall:
+    if Classical_Overall < best_class_score:
         Classic_Model.model.save(Best_Classical)
         best_class_score = Classical_Overall
 
-    if best_cross_score < Cross_Overall:
+    if Cross_Overall < best_cross_score:
         Cross_Val_Model.model.save(Best_Cross)
         best_cross_score = Cross_Overall
 
