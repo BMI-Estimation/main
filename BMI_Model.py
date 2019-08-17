@@ -17,7 +17,7 @@ import csv
 Front_input_file = "Front_Model.csv"
 Side_input_file = "Side_Model.csv"
 Front_Model_file = 'Final_Model_Front.h5'
-Side_Model_file = 'Final_Model_Side.h5'
+Side_Model_file = 'Final_Model_Side_1.h5'
 Final_BMI_Model = 'Final_Model_BMI.h5'
 Low_Score_File = 'Lowest_Score_BMI.txt'
 Classic_Model_File = 'Classical_BMI.h5'
@@ -43,9 +43,11 @@ Input_parameters_Front = np.asarray(Input_parameters_Front)
 BMI_file = "BMI.csv"
 dataframe_traning_outputs = open(BMI_file, 'r')
 reader = csv.reader(dataframe_traning_outputs, delimiter=",")
-BMI = [[float(1) for entry in row] for row in reader]
+BMI = [[float(entry) for entry in row] for row in reader]
 BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
 BMI = np.asarray(BMI)
+BMI = BMI[:,2]
+print(BMI)
 print('F', Input_parameters_Front)
 print('S', Input_parameters_Side)
 print('FL', len(Input_parameters_Front), 'SL', len(Input_parameters_Side), 'BL', len(BMI))
@@ -56,17 +58,17 @@ Side_Model = load_model(Side_Model_file)
 Y_Side = Side_Model.predict(Input_parameters_Side)
 Y_Front = Front_Model.predict(Input_parameters_Front)
 # split into input (X) and output (Y) variables
-X = np.column_stack(Y_Side,Y_Front)
+X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
-print(X)
+#print(X)
 Y= Y.reshape(-1,1)
-print(Y)
+#print(Y)
 # define base model
 def baseline_model():
 	# create model
     regressor = Sequential()
-    regressor.add(Dense(units=20, input_dim=2, activation="relu"))
-    regressor.add(Dense(units=4, activation="relu"))
+    regressor.add(Dense(units=10, input_dim=2, activation="relu"))
+    regressor.add(Dense(units=6, activation="relu"))
     regressor.add(Dense(units=1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
     return regressor
@@ -82,7 +84,7 @@ seed = 10
 np.random.seed(seed)
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
 #finding optimal model
-for x in range(1):
+for x in range(2):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
@@ -96,8 +98,8 @@ for x in range(1):
     plt.legend(['train','test'], loc='upper left')
     plt.show()
     # mean absolute error
-    plt.plot(history.history['mae'])
-    plt.plot(history.history['val_mae'])
+    plt.plot(history.history['mean_absolute_error'])
+    plt.plot(history.history['val_mean_absolute_error'])
     plt.title('Mean absolute error')
     plt.ylabel('MAE')
     plt.xlabel('epoch')
@@ -161,7 +163,7 @@ for x in range(1):
 
     # Model selection
     def overallscore(MSE, MAE, Max):
-        score = (0.35 * MSE) + (0.35 * MAE) + (0.3 * Max)
+        score = MAE
         return score
 
 
@@ -187,6 +189,12 @@ Y_Proposed = Proposed_Model.predict(X_Unseen)
 plt.plot(Y_Unseen)
 plt.plot(Y_Proposed)
 plt.legend(['Actual', 'Model'], loc='upper left')
+plt.show()
+plt.scatter(Y_Unseen, Y_Proposed)
+plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+plt.xlabel('Measured')
+plt.ylabel('Predicted')
+plt.title('Final method prediction')
 plt.show()
 score_file = open(Low_Score_File,"w")
 score_file.write(str(lowest_score))
