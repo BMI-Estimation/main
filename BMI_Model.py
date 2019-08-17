@@ -69,6 +69,7 @@ def baseline_model():
     regressor = Sequential()
     regressor.add(Dense(units=10, input_dim=2, activation="relu"))
     regressor.add(Dense(units=6, activation="relu"))
+    regressor.add(Dense(units=4, activation="relu"))
     regressor.add(Dense(units=1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
     return regressor
@@ -78,13 +79,18 @@ Lowest_score_data = score_file.values
 Lowest_score_array = Lowest_score_data[:1]
 lowest_score = Lowest_score_array.item(0)
 Regressor= baseline_model()
+Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=500, batch_size=5, verbose=1)
 progress = []
 #Separate file data into seen and unseen data prior to model comparison
 seed = 10
 np.random.seed(seed)
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
+# Model selection
+def overallscore(MSE, MAE, Max):
+    score = MAE + Max
+    return score
 #finding optimal model
-for x in range(2):
+for x in range(3):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
@@ -114,28 +120,35 @@ for x in range(2):
     plt.title('Classic method prediction')
     plt.show()
     #evaluate model with dataset
-    estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
+    # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
     Regressor.model.save(Classic_Model_File)
-    estimator.model = load_model(Classic_Model_File)
+    # estimator.model = load_model(Classic_Model_File)
     kfold = KFold(n_splits=10, random_state=x)
-    results = cross_val_score(estimator, X, Y, cv=kfold)
-    print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
-    print(results)
-    #Cross validation model analysis (loss)
-    plt.plot(abs(results))
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('Fold')
-    plt.legend(['train'], loc='upper left')
-    plt.show()
+    # results = cross_val_score(estimator, X, Y, cv=kfold)
+    # print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
+    # print(results)
+    # #Cross validation model analysis (loss)
+    # plt.plot(abs(results))
+    # plt.title('model loss')
+    # plt.ylabel('loss')
+    # plt.xlabel('Fold')
+    # plt.legend(['train'], loc='upper left')
+    # plt.show()
     # Optimal estimator extraction
-    Cross_Val = cross_validate(estimator, X, Y, cv=kfold, return_estimator=True)
+    Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
     estimator_array = Cross_Val['estimator']
     Cross_val_estimator = estimator_array[9]
     Cross_val_estimator.model.save(Cross_Model_File)
     # Assessing optimal model
     Final = load_model(Cross_Model_File)
     Y_Cross_Val = Final.predict(X_test)
+    #scatter cross val
+    plt.scatter(Y_test, Y_Cross_Val)
+    plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+    plt.xlabel('Measured')
+    plt.ylabel('Predicted')
+    plt.title('Cross method prediction')
+    plt.show()
     plt.plot(Y_test)
     plt.plot(Y_Classic)
     plt.plot(Y_Cross_Val)
@@ -159,14 +172,8 @@ for x in range(2):
     print(str(Classical_MSE) + "\t" + str(Cross_MSE))
     print(str(Classical_MAE) + "\t" + str(Cross_MAE))
     print(str(Classical_Max) + "\t" + str(Cross_Max))
-
-
-    # Model selection
-    def overallscore(MSE, MAE, Max):
-        score = MAE
-        return score
-
-
+    #save file option
+    save = input("Save model?")
     Classical_Overall = overallscore(Classical_MSE, Classical_MAE, Classical_Max)
     Cross_Overall = overallscore(Cross_MSE, Cross_MAE, Cross_Max)
     if Classical_Overall < Cross_Overall:
