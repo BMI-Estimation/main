@@ -44,20 +44,23 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
+import os
+import datetime
 
 # Model selection
-def overallscore(MSE, MAE, Max):
-    score = (0.35 * MSE) + (0.35 * MAE) + (0.3 * Max)
+def overallscore(MAE, Max):
+    score = MAE/Max
     return score
 
 # define base model
 def baseline_model():
 	# create model
     regressor = Sequential()
-    regressor.add(Dense(20, input_dim=6, activation="relu"))
-    regressor.add(Dense(4, activation="relu"))
+    regressor.add(Dense(7, input_dim=6, activation="relu"))
+    regressor.add(Dense(5, activation="relu"))
+    regressor.add(Dense(3, activation="relu"))
     regressor.add(Dense(1, activation="linear"))
-    regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
+    regressor.compile(optimizer='adam', loss='mean_absolute_error')
     return regressor
 
 # load dataset inputs
@@ -89,17 +92,25 @@ Lowest_score_array = Lowest_score_data[:1]
 lowest_score = Lowest_score_array.item(0)
 
 Classic_Model = baseline_model()
-Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
+Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=500, batch_size=5, verbose=1)
 progress = []
+best_scores = {}
 
 # Initialise Best Scores to be Overwritten
-best_class_score = 10000
-best_cross_score = 10000
+best_class_score = 0
+best_cross_score = 0
 
 # Separate file data into seen and unseen data prior to model comparison
 seed = 10
 np.random.seed(seed)
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
+
+NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
+NetworkArc = '-'.join(NetworkArc)
+today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+directory = 'models/' + NetworkArc + '/' + today + '/'
+os.makedirs(directory)
+infoFile = open(directory + 'info.txt', 'w', newline='')
 
 # finding optimal model
 for x in range(args["number"]):
@@ -113,11 +124,10 @@ for x in range(args["number"]):
     # evaluate model with dataset for Cross Validation
     kfold = KFold(n_splits=10, random_state=x)
     # Optimal estimator extraction
-    Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
+    Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True, scoring='neg_mean_absolute_error')
     results = Cross_Val["test_score"]
-    print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
     estimator_array = Cross_Val['estimator']
-    Cross_val_estimator = estimator_array[9]
+    Cross_val_estimator = estimator_array[-1]
     Cross_val_estimator.model.save(Cross_Model_File)
     # Assessing optimal model
     Cross_Val_Model = load_model(Cross_Model_File)
@@ -138,31 +148,35 @@ for x in range(args["number"]):
     print(str(Classical_MAE) + "\t" + str(Cross_MAE))
     print(str(Classical_Max) + "\t" + str(Cross_Max))
 
-    Classical_Overall = overallscore(Classical_MSE, Classical_MAE, Classical_Max)
-    Cross_Overall = overallscore(Cross_MSE, Cross_MAE, Cross_Max)
+    Classical_Overall = overallscore(Classical_MAE, Classical_Max)
+    Cross_Overall = overallscore(Cross_MAE, Cross_Max)
     
-    if Classical_Overall < Cross_Overall:
+    if Classical_Overall > Cross_Overall:
         print("Classical")
-        if Classical_Overall<lowest_score:
+        if Classical_Overall > lowest_score:
             Classic_Model.model.save(Final_Model_File)
             lowest_score=Classical_Overall
             print("new model "+ str(lowest_score))
             progress.append([Classical_MAE, 'Classical'])
     else:
         print("Cross")
-        if Cross_Overall<lowest_score:
+        if Cross_Overall > lowest_score:
             Cross_Val_Model.model.save(Final_Model_File)
             lowest_score = Cross_Overall
             print("new model "+ str(lowest_score))
             progress.append([Cross_MAE, 'Cross'])
 
-    if Classical_Overall < best_class_score:
-        Classic_Model.model.save(Best_Classical)
+    if Classical_Overall > best_class_score:
+        Classic_Model.model.save(directory + Best_Classical)
+        best_scores['Classical'] = [Classical_MAE, Classical_Max]
         best_class_score = Classical_Overall
 
-    if Cross_Overall < best_cross_score:
-        Cross_Val_Model.model.save(Best_Cross)
+    if Cross_Overall > best_cross_score:
+        Cross_Val_Model.model.save(directory + Best_Cross)
+        best_scores['Cross'] = [Cross_MAE, Cross_Max]
         best_cross_score = Cross_Overall
+
+    infoFile.write(str(best_scores))
 
     if args["visualize"]:
         # Cross validation model analysis (loss)
@@ -177,12 +191,14 @@ for x in range(args["number"]):
         plt.plot(Y_Unseen_Classical)
         plt.plot(Y_Unseen_Cross)
         plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+        plt.title('Unseen Data Performance')
         plt.show()
 
         plt.plot(Y_test)
         plt.plot(Y_Classic)
         plt.plot(Y_Cross_Val)
         plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+        plt.title('Test Data Performance')
         plt.show()
 
         # loss
@@ -190,16 +206,6 @@ for x in range(args["number"]):
         plt.plot(history.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train','test'], loc='upper left')
-        plt.show()
-
-        # mean absolute error
-        # print(history.history)
-        plt.plot(history.history['mean_absolute_error'])
-        plt.plot(history.history['val_mean_absolute_error'])
-        plt.title('Mean absolute error')
-        plt.ylabel('MAE')
         plt.xlabel('epoch')
         plt.legend(['train','test'], loc='upper left')
         plt.show()
