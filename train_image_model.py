@@ -34,7 +34,6 @@ import pandas
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -58,7 +57,6 @@ def baseline_model():
     regressor = Sequential()
     regressor.add(Dense(7, input_dim=6, activation="relu"))
     regressor.add(Dense(5, activation="relu"))
-    regressor.add(Dense(3, activation="relu"))
     regressor.add(Dense(1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_absolute_error')
     return regressor
@@ -157,14 +155,14 @@ for x in range(args["number"]):
             Classic_Model.model.save(Final_Model_File)
             lowest_score=Classical_Overall
             print("new model "+ str(lowest_score))
-            progress.append([Classical_MAE, 'Classical'])
+            progress.append([lowest_score, 'Classical'])
     else:
         print("Cross")
         if Cross_Overall > lowest_score:
             Cross_Val_Model.model.save(Final_Model_File)
             lowest_score = Cross_Overall
             print("new model "+ str(lowest_score))
-            progress.append([Cross_MAE, 'Cross'])
+            progress.append([lowest_score, 'Cross'])
 
     if Classical_Overall > best_class_score:
         Classic_Model.model.save(directory + Best_Classical)
