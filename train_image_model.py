@@ -47,11 +47,14 @@ from sklearn.metrics import max_error
 import csv
 import os
 import datetime
+from scipy.interpolate import interp1d
 
 # Model selection
 def overallscore(MAE, Max):
-    score = MAE/Max
-    return score
+    if MAE < 4:
+        m = interp1d([0,4],[4,0])
+        return MAE/Max + m(MAE)
+    else: return MAE/Max
 
 # define base model
 def baseline_model():
@@ -228,7 +231,7 @@ for x in range(args["number"]):
         plt.title('Cross val method prediction')
         plt.show()
 
-print(progress)
+print('Progress', progress)
 Proposed_Model = load_model(Final_Model_File)
 Y_Proposed = Proposed_Model.predict(X_Unseen)
 # plt.plot(Y_Unseen)
