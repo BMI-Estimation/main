@@ -154,6 +154,26 @@ def train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile):
 
 		if args["visualize"]: showGraphs(results, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross, Y_test, Y_Classic, Y_Cross_Val, history)
 	
+	Proposed_Classic_Model = load_model(fileNames["directory"] + fileNames["Best_Classical"])
+	Y_Proposed_Class = Proposed_Classic_Model.predict(X_Unseen)
+
+	Proposed_Cross_Model = load_model(fileNames["directory"] + fileNames["Best_Cross"])
+	Y_Proposed_Cross = Proposed_Cross_Model.predict(X_Unseen)
+
+	plt.scatter(Y_Proposed_Class, Y_Unseen)
+	plt.plot([Y_Proposed_Class.min(), Y_Proposed_Class.max()], [Y_Proposed_Class.min(), Y_Proposed_Class.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Classic Model')
+	plt.show()
+
+	plt.scatter(Y_Proposed_Cross, Y_Unseen)
+	plt.plot([Y_Proposed_Cross.min(), Y_Proposed_Cross.max()], [Y_Proposed_Cross.min(), Y_Proposed_Cross.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Cross Model')
+	plt.show()
+
 	infoFile.close()
 	print('Progress', progress)
 	return
@@ -178,6 +198,7 @@ def trainWithBMI(X, Y, args, fileNames):
 	return
 
 def trainHeight(X, Y, args, fileNames):
+	print("[INFO] Training Against Height")
 	# Initialise Models and Folder Structure
 	inputDim = 1
 	neuronsPerLayerExceptOutputLayer = [2]
@@ -188,7 +209,8 @@ def trainHeight(X, Y, args, fileNames):
 	# Created Directory
 	NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
 	NetworkArc = '-'.join(NetworkArc)
-	fileNames["directory"] = fileNames["directory"] + NetworkArc + ' - Height/'
+	today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+	fileNames["directory"] = 'models/' + today + '/Height/' + NetworkArc + '/'
 	os.makedirs(fileNames["directory"])
 
 	# Initialise Models and Folder Structure
@@ -197,9 +219,10 @@ def trainHeight(X, Y, args, fileNames):
 	return
 
 def trainMass(X, Y, args, fileNames):
+	print("[INFO] Training Against Mass")
 	# Initialise Models and Folder Structure
 	inputDim = 6
-	neuronsPerLayerExceptOutputLayer = [7, 4]
+	neuronsPerLayerExceptOutputLayer = [7, 7]
 	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
 	Classic_Model = build()
 	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
@@ -207,21 +230,10 @@ def trainMass(X, Y, args, fileNames):
 	# Created Directory
 	NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
 	NetworkArc = '-'.join(NetworkArc)
-	fileNames["directory"] = fileNames["directory"] + NetworkArc + ' - Mass/'
+	today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+	fileNames["directory"] = 'models/' + today + '/Mass/' + NetworkArc + '/'
 	os.makedirs(fileNames["directory"])
 
 	infoFile = open(fileNames["directory"] + 'Mass-info.txt', 'w', newline='')
 	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
-	return
-
-def trainWithMassAndHeight(X, Y, args, fileNames):
-	today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
-
-	fileNames["directory"] = 'models/' + today + '/HW/'
-	print("[INFO} Training Against Mass")
-	trainMass(X, Y[0], args, fileNames)
-
-	fileNames["directory"] = 'models/' + today + '/HW/'
-	print("[INFO} Training Against Heights")
-	trainHeight(X[:,1], Y[1], args, fileNames)
 	return

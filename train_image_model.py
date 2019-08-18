@@ -6,8 +6,13 @@ ap.add_argument("-n", "--number", type=int, required=True, help="Number of train
 ap.add_argument("-f", "--front", nargs='?', const=True, type=bool, required=False, default=False, help="Train Front Model.")
 ap.add_argument("-s", "--side", nargs='?', const=True, type=bool, required=False, default=False, help="Train Side Model.")
 ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
-ap.add_argument("-hw", "--heightWeight", nargs='?', const=True, type=bool, required=False, default=False, help="Train vs Height and Weight instead of BMI.")
+ap.add_argument("-he", "--height", nargs='?', const=True, type=bool, required=False, default=False, help="Train vs Height.")
+ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train vs Weight.")
 args = vars(ap.parse_args())
+
+if args["height"] and args["mass"]:
+	print("Please Either Specify whether training vs. Height (-h), Mass (-m) or BMI (default), and not multiple.")
+	exit()
 
 fileNames = {}
 
@@ -30,7 +35,7 @@ else:
 	print("Please Specify Front or Side Model training.")
 	exit()
 
-from trainingFunctions import trainWithBMI, trainWithMassAndHeight
+from trainingFunctions import trainWithBMI, trainMass, trainHeight
 import numpy as np
 import csv
 
@@ -52,10 +57,12 @@ output = [row for index, row in enumerate(output) if index not in badDataIndex]
 output = np.asarray(output)
 dataframe_training_outputs.close()
 
-if args["heightWeight"]:
-	mass = output[:,0]
+if args["height"]:
 	height = output[:,1]
-	trainWithMassAndHeight(Input_parameters, [mass, height], args, fileNames)
+	trainHeight(Input_parameters[:,1], height, args, fileNames)
+elif args["mass"]:
+	mass = output[:,0]
+	trainMass(Input_parameters, mass, args, fileNames)
 else:
 	BMI = output[:,2]
 	trainWithBMI(Input_parameters, BMI, args, fileNames)
