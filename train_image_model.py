@@ -12,29 +12,29 @@ args = vars(ap.parse_args())
 fileNames = {}
 
 if args["side"] and args["front"]:
-    print("Please Specify Either Front or Side Model training, not both.")
-    exit()
+	print("Please Specify Either Front or Side Model training, not both.")
+	exit()
 elif args["side"]:
-    fileNames["file"] = "side.csv"
-    fileNames["Final_Model_File"] = "Final_Model_Side.h5"
-    fileNames["Low_Score_File"] = "Lowest_Score_Side.txt"
-    fileNames["Classic_Model_File"] = 'Classical_Side.h5'
-    fileNames["Cross_Model_File"] = 'Cross_Side.h5'
-    fileNames["Best_Classical"] = 'Best_Class_Side.h5'
-    fileNames["Best_Cross"] = 'Best_Cross_Side.h5'
+	fileNames["file"] = "side.csv"
+	fileNames["Final_Model_File"] = "Final_Model_Side.h5"
+	fileNames["Low_Score_File"] = "Lowest_Score_Side.txt"
+	fileNames["Classic_Model_File"] = 'Classical_Side.h5'
+	fileNames["Cross_Model_File"] = 'Cross_Side.h5'
+	fileNames["Best_Classical"] = 'Best_Class_Side.h5'
+	fileNames["Best_Cross"] = 'Best_Cross_Side.h5'
 elif args["front"]:
-    fileNames["file"] = "front.csv"
-    fileNames["Final_Model_File"] = "Final_Model_Front.h5"
-    fileNames["Low_Score_File"] = "Lowest_Score_Front.txt"
-    fileNames["Classic_Model_File"] = 'Classical_Front.h5'
-    fileNames["Cross_Model_File"] = 'Cross_Front.h5'
-    fileNames["Best_Classical"] = 'Best_Class_Front.h5'
-    fileNames["Best_Cross"] = 'Best_Cross_Front.h5'
+	fileNames["file"] = "front.csv"
+	fileNames["Final_Model_File"] = "Final_Model_Front.h5"
+	fileNames["Low_Score_File"] = "Lowest_Score_Front.txt"
+	fileNames["Classic_Model_File"] = 'Classical_Front.h5'
+	fileNames["Cross_Model_File"] = 'Cross_Front.h5'
+	fileNames["Best_Classical"] = 'Best_Class_Front.h5'
+	fileNames["Best_Cross"] = 'Best_Cross_Front.h5'
 else:
-    print("Please Specify Front or Side Model training.")
-    exit()
+	print("Please Specify Front or Side Model training.")
+	exit()
 
-from trainingFunctions import trainWithBMI
+from trainingFunctions import trainWithBMI, trainWithMassAndHeight
 import numpy as np
 from keras.wrappers.scikit_learn import KerasRegressor
 from keras.models import Sequential
@@ -46,12 +46,12 @@ import datetime
 # define base model
 def baseline_model():
 	# create model
-    regressor = Sequential()
-    regressor.add(Dense(7, input_dim=6, activation="relu"))
-    regressor.add(Dense(5, activation="relu"))
-    regressor.add(Dense(1, activation="linear"))
-    regressor.compile(optimizer='adam', loss='mean_absolute_error')
-    return regressor
+	regressor = Sequential()
+	regressor.add(Dense(7, input_dim=6, activation="relu"))
+	regressor.add(Dense(5, activation="relu"))
+	regressor.add(Dense(1, activation="linear"))
+	regressor.compile(optimizer='adam', loss='mean_absolute_error')
+	return regressor
 
 # Initialise Models and Folder Structure
 Classic_Model = baseline_model()
@@ -82,9 +82,9 @@ output = np.asarray(output)
 dataframe_training_outputs.close()
 
 if args["heightWeight"]:
-    print('why')
-    mass = output[:,0]
-    height = output[:,1]
+	mass = output[:,0]
+	height = output[:,1]
+	trainWithMassAndHeight(Input_parameters, [mass, height], args, Classic_Model, Cross_Val_Regressor, fileNames)
 else:
-    BMI = output[:,2]
-    trainWithBMI(Input_parameters, BMI, args, Classic_Model, Cross_Val_Regressor, fileNames)
+	BMI = output[:,2]
+	trainWithBMI(Input_parameters, BMI, args, Classic_Model, Cross_Val_Regressor, fileNames)

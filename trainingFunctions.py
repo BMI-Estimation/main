@@ -29,7 +29,7 @@ def showGraphs(crossValTestResults, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross
 	plt.title('Test Data Performance')
 	plt.show()
 
-    # loss
+		# loss
 	plt.plot(history.history['loss'])
 	plt.plot(history.history['val_loss'])
 	plt.title('model loss')
@@ -55,10 +55,10 @@ def showGraphs(crossValTestResults, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross
 
 # Model selection
 def overallscore(MAE, Max):
-    if MAE < 4:
-        m = interp1d([0,4],[4,0])
-        return MAE/Max + m(MAE)
-    else: return MAE/Max
+		if MAE < 4:
+				m = interp1d([0,4],[4,0])
+				return MAE/Max + m(MAE)
+		else: return MAE/Max
 
 def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 	infoFile = open(fileNames["directory"] + 'info.txt', 'w', newline='')
@@ -73,12 +73,12 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 	Lowest_score_array = Lowest_score_data[:1]
 	lowest_score = Lowest_score_array.item(0)
 	Y = Y.reshape(-1,1)
-    # Separate file data into seen and unseen data prior to model comparison
+		# Separate file data into seen and unseen data prior to model comparison
 	seed = 10
 	np.random.seed(seed)
 	X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
 
-    # finding optimal model
+	# finding optimal model
 	for x in range(args["number"]):
 		np.random.seed(x)
 		# classic test split
@@ -116,31 +116,31 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 
 		Classical_Overall = overallscore(Classical_MAE, Classical_Max)
 		Cross_Overall = overallscore(Cross_MAE, Cross_Max)
-        
+				
 		if Classical_Overall > Cross_Overall:
-		    print("Classical")
-		    if Classical_Overall > lowest_score:
-		        Classic_Model.model.save(fileNames["Final_Model_File"])
-		        lowest_score=Classical_Overall
-		        print("new model "+ str(lowest_score))
-		        progress.append([lowest_score, 'Classical'])
+				print("Classical")
+				if Classical_Overall > lowest_score:
+						Classic_Model.model.save(fileNames["Final_Model_File"])
+						lowest_score=Classical_Overall
+						print("new model "+ str(lowest_score))
+						progress.append([lowest_score, 'Classical'])
 		else:
-		    print("Cross")
-		    if Cross_Overall > lowest_score:
-		        Cross_Val_Model.model.save(fileNames["Final_Model_File"])
-		        lowest_score = Cross_Overall
-		        print("new model "+ str(lowest_score))
-		        progress.append([lowest_score, 'Cross'])
+				print("Cross")
+				if Cross_Overall > lowest_score:
+						Cross_Val_Model.model.save(fileNames["Final_Model_File"])
+						lowest_score = Cross_Overall
+						print("new model "+ str(lowest_score))
+						progress.append([lowest_score, 'Cross'])
 
 		if Classical_Overall > best_class_score:
-		    Classic_Model.model.save(fileNames["directory"] + fileNames["Best_Classical"])
-		    best_scores['Classical'] = [Classical_MAE, Classical_Max]
-		    best_class_score = Classical_Overall
+				Classic_Model.model.save(fileNames["directory"] + fileNames["Best_Classical"])
+				best_scores['Classical'] = [Classical_MAE, Classical_Max]
+				best_class_score = Classical_Overall
 
 		if Cross_Overall > best_cross_score:
-		    Cross_Val_Model.model.save(fileNames["directory"] + fileNames["Best_Cross"])
-		    best_scores['Cross'] = [Cross_MAE, Cross_Max]
-		    best_cross_score = Cross_Overall
+				Cross_Val_Model.model.save(fileNames["directory"] + fileNames["Best_Cross"])
+				best_scores['Cross'] = [Cross_MAE, Cross_Max]
+				best_cross_score = Cross_Overall
 
 		infoFile.write(str(best_scores))
 		infoFile.write(str('\n'))
@@ -151,10 +151,10 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 	print('Progress', progress)
 	Proposed_Model = load_model(fileNames["Final_Model_File"])
 	Y_Proposed = Proposed_Model.predict(X_Unseen)
-    # plt.plot(Y_Unseen)
-    # plt.plot(Y_Proposed)
-    # plt.legend(['Actual', 'Model'], loc='upper left')
-    # plt.show()
+	# plt.plot(Y_Unseen)
+	# plt.plot(Y_Proposed)
+	# plt.legend(['Actual', 'Model'], loc='upper left')
+	# plt.show()
 	score_file = open(fileNames["Low_Score_File"],"w")
 	score_file.write(str(lowest_score))
 	score_file.close()
@@ -166,3 +166,19 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 	plt.ylabel('Predicted')
 	plt.title('Final Model')
 	plt.show()
+	return
+
+def trainHeight(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
+
+	return
+
+def trainMass(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
+	
+	return
+
+def trainWithMassAndHeight(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
+	print("[INFO} Training Against Mass")
+	trainMass(X, Y[0], args, Classic_Model, Cross_Val_Regressor, fileNames)
+	print("[INFO} Training Against Heights")
+	trainHeight(X, Y[1], args, Classic_Model, Cross_Val_Regressor, fileNames)
+	return
