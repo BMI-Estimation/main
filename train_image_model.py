@@ -16,16 +16,12 @@ if args["side"] and args["front"]:
 	exit()
 elif args["side"]:
 	fileNames["file"] = "side.csv"
-	fileNames["Final_Model_File"] = "Final_Model_Side.h5"
-	fileNames["Low_Score_File"] = "Lowest_Score_Side.txt"
 	fileNames["Classic_Model_File"] = 'Classical_Side.h5'
 	fileNames["Cross_Model_File"] = 'Cross_Side.h5'
 	fileNames["Best_Classical"] = 'Best_Class_Side.h5'
 	fileNames["Best_Cross"] = 'Best_Cross_Side.h5'
 elif args["front"]:
 	fileNames["file"] = "front.csv"
-	fileNames["Final_Model_File"] = "Final_Model_Front.h5"
-	fileNames["Low_Score_File"] = "Lowest_Score_Front.txt"
 	fileNames["Classic_Model_File"] = 'Classical_Front.h5'
 	fileNames["Cross_Model_File"] = 'Cross_Front.h5'
 	fileNames["Best_Classical"] = 'Best_Class_Front.h5'
@@ -36,32 +32,7 @@ else:
 
 from trainingFunctions import trainWithBMI, trainWithMassAndHeight
 import numpy as np
-from keras.wrappers.scikit_learn import KerasRegressor
-from keras.models import Sequential
-from keras.layers import Dense
 import csv
-import os
-import datetime
-
-# define base model
-def baseline_model():
-	# create model
-	regressor = Sequential()
-	regressor.add(Dense(7, input_dim=6, activation="relu"))
-	regressor.add(Dense(5, activation="relu"))
-	regressor.add(Dense(1, activation="linear"))
-	regressor.compile(optimizer='adam', loss='mean_absolute_error')
-	return regressor
-
-# Initialise Models and Folder Structure
-Classic_Model = baseline_model()
-Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
-
-NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
-NetworkArc = '-'.join(NetworkArc)
-today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
-fileNames["directory"] = 'models/' + NetworkArc + '/' + today + '/'
-os.makedirs(fileNames["directory"])
 
 # load dataset inputs
 dataframe_traning_inputs = open(fileNames["file"], 'r')
@@ -84,7 +55,7 @@ dataframe_training_outputs.close()
 if args["heightWeight"]:
 	mass = output[:,0]
 	height = output[:,1]
-	trainWithMassAndHeight(Input_parameters, [mass, height], args, Classic_Model, Cross_Val_Regressor, fileNames)
+	trainWithMassAndHeight(Input_parameters, [mass, height], args, fileNames)
 else:
 	BMI = output[:,2]
-	trainWithBMI(Input_parameters, BMI, args, Classic_Model, Cross_Val_Regressor, fileNames)
+	trainWithBMI(Input_parameters, BMI, args, fileNames)

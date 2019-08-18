@@ -1,10 +1,30 @@
 import numpy as np
-from keras.models import load_model
+from keras.models import load_model, Sequential
+from keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, max_error
 from scipy.interpolate import interp1d
 import pandas
+import os
+import datetime
+
+# define base model
+def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
+	# create model
+	def build_fn():
+		regressor = Sequential()
+		regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=inputDim, activation="relu"))
+
+		for units in neuronsPerLayerExceptOutputLayer[1:]:
+			regressor.add(Dense(units, activation="relu"))
+	
+		regressor.add(Dense(1, activation="linear"))
+		regressor.compile(optimizer='adam', loss='mean_absolute_error')
+		return regressor
+	
+	return build_fn
 
 def showGraphs(crossValTestResults, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross, Y_test, Y_Classic, Y_Cross_Val, history):
 	# Cross validation model analysis (loss)
@@ -60,20 +80,14 @@ def overallscore(MAE, Max):
 				return MAE/Max + m(MAE)
 		else: return MAE/Max
 
-def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
-	infoFile = open(fileNames["directory"] + 'info.txt', 'w', newline='')
+def train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile):
 	progress = []
 	best_scores = {}
 	# Initialise Best Scores to be Overwritten
 	best_class_score = 0
 	best_cross_score = 0
-	# Get current best model score
-	score_file = pandas.read_csv(fileNames["Low_Score_File"], sep=" ", header=None, names=None)
-	Lowest_score_data = score_file.values
-	Lowest_score_array = Lowest_score_data[:1]
-	lowest_score = Lowest_score_array.item(0)
 	Y = Y.reshape(-1,1)
-		# Separate file data into seen and unseen data prior to model comparison
+	# Separate file data into seen and unseen data prior to model comparison
 	seed = 10
 	np.random.seed(seed)
 	X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
@@ -119,18 +133,10 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 				
 		if Classical_Overall > Cross_Overall:
 				print("Classical")
-				if Classical_Overall > lowest_score:
-						Classic_Model.model.save(fileNames["Final_Model_File"])
-						lowest_score=Classical_Overall
-						print("new model "+ str(lowest_score))
-						progress.append([lowest_score, 'Classical'])
+				progress.append([Classical_Overall, 'Classical'])
 		else:
 				print("Cross")
-				if Cross_Overall > lowest_score:
-						Cross_Val_Model.model.save(fileNames["Final_Model_File"])
-						lowest_score = Cross_Overall
-						print("new model "+ str(lowest_score))
-						progress.append([lowest_score, 'Cross'])
+				progress.append([Cross_Overall, 'Cross'])
 
 		if Classical_Overall > best_class_score:
 				Classic_Model.model.save(fileNames["directory"] + fileNames["Best_Classical"])
@@ -147,38 +153,75 @@ def trainWithBMI(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 		infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs']}))
 
 		if args["visualize"]: showGraphs(results, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross, Y_test, Y_Classic, Y_Cross_Val, history)
-
-	print('Progress', progress)
-	Proposed_Model = load_model(fileNames["Final_Model_File"])
-	Y_Proposed = Proposed_Model.predict(X_Unseen)
-	# plt.plot(Y_Unseen)
-	# plt.plot(Y_Proposed)
-	# plt.legend(['Actual', 'Model'], loc='upper left')
-	# plt.show()
-	score_file = open(fileNames["Low_Score_File"],"w")
-	score_file.write(str(lowest_score))
-	score_file.close()
-	print(lowest_score)
-
-	plt.scatter(Y_Proposed, Y_Unseen)
-	plt.plot([Y_Proposed.min(), Y_Proposed.max()], [Y_Proposed.min(), Y_Proposed.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Model')
-	plt.show()
-	return
-
-def trainHeight(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
-
-	return
-
-def trainMass(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
 	
+	infoFile.close()
+	print('Progress', progress)
 	return
 
-def trainWithMassAndHeight(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames):
+def trainWithBMI(X, Y, args, fileNames):
+	# Initialise Models and Folder Structure
+	inputDim = 6
+	neuronsPerLayerExceptOutputLayer = [7, 4]
+	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
+	Classic_Model = build()
+	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
+
+	# Created Directory
+	NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
+	NetworkArc = '-'.join(NetworkArc)
+	today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+	fileNames["directory"] = 'models/' + today + '/BMI/' + NetworkArc + '/'
+	os.makedirs(fileNames["directory"])
+
+	infoFile = open(fileNames["directory"] + 'BMI-info.txt', 'w', newline='')
+	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
+	return
+
+def trainHeight(X, Y, args, fileNames):
+	# Initialise Models and Folder Structure
+	inputDim = 1
+	neuronsPerLayerExceptOutputLayer = [2]
+	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
+	Classic_Model = build()
+	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
+
+	# Created Directory
+	NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
+	NetworkArc = '-'.join(NetworkArc)
+	fileNames["directory"] = fileNames["directory"] + NetworkArc + ' - Height/'
+	os.makedirs(fileNames["directory"])
+
+	# Initialise Models and Folder Structure
+	infoFile = open(fileNames["directory"] + 'Height-info.txt', 'w', newline='')
+	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
+	return
+
+def trainMass(X, Y, args, fileNames):
+	# Initialise Models and Folder Structure
+	inputDim = 6
+	neuronsPerLayerExceptOutputLayer = [7, 4]
+	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
+	Classic_Model = build()
+	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
+
+	# Created Directory
+	NetworkArc = [str(row.units) for row in Classic_Model.model.layers]
+	NetworkArc = '-'.join(NetworkArc)
+	fileNames["directory"] = fileNames["directory"] + NetworkArc + ' - Mass/'
+	os.makedirs(fileNames["directory"])
+
+	infoFile = open(fileNames["directory"] + 'Mass-info.txt', 'w', newline='')
+	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
+	return
+
+def trainWithMassAndHeight(X, Y, args, fileNames):
+	today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+
+	fileNames["directory"] = 'models/' + today + '/HW/'
 	print("[INFO} Training Against Mass")
-	trainMass(X, Y[0], args, Classic_Model, Cross_Val_Regressor, fileNames)
+	trainMass(X, Y[0], args, fileNames)
+
+	fileNames["directory"] = 'models/' + today + '/HW/'
 	print("[INFO} Training Against Heights")
-	trainHeight(X, Y[1], args, Classic_Model, Cross_Val_Regressor, fileNames)
+	trainHeight(X[:,1], Y[1], args, fileNames)
 	return
