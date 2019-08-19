@@ -209,8 +209,8 @@ def trainWithBMI(X, Y, args, fileNames):
 def trainHeight(X, Y, args, fileNames):
 	print("[INFO] Training Against Height")
 	# Initialise Models and Folder Structure
-	inputDim = 1
-	neuronsPerLayerExceptOutputLayer = [2]
+	inputDim = 2
+	neuronsPerLayerExceptOutputLayer = [3]
 	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
 	Classic_Model = build()
 	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
