@@ -26,51 +26,45 @@ def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
 	
 	return build_fn
 
-def showGraphs(crossValTestResults, Y_Unseen, Y_Unseen_Classical, Y_Unseen_Cross, Y_test, Y_Classic, Y_Cross_Val, history):
-	# Cross validation model analysis (loss)
-	plt.plot(abs(crossValTestResults))
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('Fold')
-	plt.legend(['train'], loc='upper left')
-	plt.show()
+def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames):
+	if is_class:
+		# loss
+		plt.plot(history.history['loss'])
+		plt.plot(history.history['val_loss'])
+		plt.title('model loss')
+		plt.ylabel('loss')
+		plt.xlabel('epoch')
+		plt.legend(['train','test'], loc='upper left')
+		plt.show()
+		Proposed_Model = load_model(fileNames["directory"] + fileNames["Best_Classical"])
 
-	plt.plot(Y_Unseen)
-	plt.plot(Y_Unseen_Classical)
-	plt.plot(Y_Unseen_Cross)
-	plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-	plt.title('Unseen Data Performance')
-	plt.show()
+	else:
+		# Cross validation model analysis (loss)
+		plt.plot(abs(history))
+		plt.title('model loss')
+		plt.ylabel('loss')
+		plt.xlabel('Fold')
+		plt.legend(['train'], loc='upper left')
+		plt.show()
+		Proposed_Model = load_model(fileNames["directory"] + fileNames["Best_Cross"])
 
-	plt.plot(Y_test)
-	plt.plot(Y_Classic)
-	plt.plot(Y_Cross_Val)
-	plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-	plt.title('Test Data Performance')
-	plt.show()
-
-	# loss
-	plt.plot(history.history['loss'])
-	plt.plot(history.history['val_loss'])
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('epoch')
-	plt.legend(['train','test'], loc='upper left')
-	plt.show()
-
-	plt.scatter(Y_test, Y_Classic)
-	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+	Y_Proposed_Test = Proposed_Model.predict(X_test)
+	plt.scatter(Y_Proposed_Test, Y_test)
+	plt.plot([Y_Proposed_Test.min(), Y_Proposed_Test.max()], [Y_Proposed_Test.min(), Y_Proposed_Test.max()], 'k--', lw=4)
 	plt.xlabel('Measured')
 	plt.ylabel('Predicted')
-	plt.title('Classic method prediction')
+	plt.title('Final Model - Test Data')
 	plt.show()
 
-	plt.scatter(Y_test, Y_Cross_Val)
-	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+	# Results
+	Y_Proposed = Proposed_Model.predict(X_Unseen)
+	plt.scatter(Y_Proposed, Y_Unseen)
+	plt.plot([Y_Proposed.min(), Y_Proposed.max()], [Y_Proposed.min(), Y_Proposed.max()], 'k--', lw=4)
 	plt.xlabel('Measured')
 	plt.ylabel('Predicted')
-	plt.title('Cross val method prediction')
+	plt.title('Final Model - Unseen Data')
 	plt.show()
+
 	return
 
 # Model selection
@@ -83,7 +77,6 @@ def overallscore(MAE, Max):
 def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	Classic_Model = CM
 	Cross_Val_Regressor = CVR
-	progress = []
 	best_scores = {}
 	ClassHistory = None
 	CrossHistory = None
@@ -124,20 +117,7 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 			best_class_score = Classical_Overall
 			ClassHistory = history
 
-		infoFile.write(str(best_scores))
-		infoFile.write(str('\n'))
-		infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs']}))
-
-	# Results
-	Proposed_Classic_Model = load_model(fileNames["directory"] + fileNames["Best_Classical"])
-	Y_Proposed_Class = Proposed_Classic_Model.predict(X_Unseen)
-	Y_Classic = Proposed_Classic_Model.predict(X_test)
-	plt.scatter(Y_Proposed_Class, Y_Unseen)
-	plt.plot([Y_Proposed_Class.min(), Y_Proposed_Class.max()], [Y_Proposed_Class.min(), Y_Proposed_Class.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Classic Model')
-	plt.show()
+	if args["visualize"]: showGraphs(True, ClassHistory, X_Unseen, Y_Unseen, X_test, Y_test, fileNames)
 
 	for x in range(args["number"]):
 		np.random.seed(x)
@@ -168,24 +148,13 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 			best_scores['Cross'] = [Cross_MAE, Cross_Max]
 			best_cross_score = Cross_Overall
 			CrossHistory = results
-
-	# Results
-	Proposed_Cross_Model = load_model(fileNames["directory"] + fileNames["Best_Cross"])
-	Y_Proposed_Cross = Proposed_Cross_Model.predict(X_Unseen)
-	Y_Cross_Val = Proposed_Cross_Model.predict(X_test)
-
-	plt.scatter(Y_Proposed_Cross, Y_Unseen)
-	plt.plot([Y_Proposed_Cross.min(), Y_Proposed_Cross.max()], [Y_Proposed_Cross.min(), Y_Proposed_Cross.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Cross Model')
-	plt.show()
-
+	
+	if args["visualize"]: showGraphs(False, CrossHistory, X_Unseen, Y_Unseen, X_test, Y_test, fileNames)
+	
+	infoFile.write(str(best_scores))
+	infoFile.write(str('\n'))
+	infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs']}))
 	infoFile.close()
-	print('Progress', progress)
-
-	if args["visualize"]: showGraphs(CrossHistory, Y_Unseen, Y_Proposed_Class, Y_Proposed_Cross, Y_test, Y_Classic, Y_Cross_Val, ClassHistory)
-
 	return
 
 def trainWithBMI(X, Y, args, fileNames):

@@ -55,11 +55,11 @@ Input_parameters = [[float(entry) for entry in row] for row in reader]
 
 alt_dataframe_training_inputs = open(fileNames["altFile"], 'r')
 reader = csv.reader(alt_dataframe_training_inputs, delimiter=",")
-badDataIndex = [index for index, row in enumerate(Input_parameters) if row[1] > 2.5]
+badDataIndex = [index for index, row in enumerate(Input_parameters) if row[1] > 2.5 or row[1] < 1]
 
 if args["height"]:
 	Alt_Input_parameters = [[float(entry) for entry in row] for row in reader]
-	[badDataIndex.append(index) for index, row in enumerate(Alt_Input_parameters) if row[1] > 2.5 and index not in badDataIndex]
+	[badDataIndex.append(index) for index, row in enumerate(Alt_Input_parameters) if (row[1] > 2.5 or row[1] < 1) and index not in badDataIndex]
 	Alt_Input_parameters = [row for index, row in enumerate(Alt_Input_parameters) if index not in badDataIndex]
 	Alt_Input_parameters = np.asarray(Alt_Input_parameters)
 
