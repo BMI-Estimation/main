@@ -14,6 +14,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
 import argparse
+from scipy.interpolate import interp1d
 #argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
@@ -113,9 +114,11 @@ seed = 10
 np.random.seed(seed)
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
 # Model selection
-def overallscore(MSE, MAE, Max):
-    score = MAE + Max
-    return score
+def overallscore(MAE, Max):
+	if MAE < 4:
+		m = interp1d([0,4],[4,0])
+		return MAE/Max + m(MAE)
+	else: return MAE/Max
 #finding optimal model
 for x in range(3):
     np.random.seed(x)
@@ -201,8 +204,8 @@ for x in range(3):
     print(str(Classical_Max) + "\t" + str(Cross_Max))
     #save file option
     save = input("Save model?")
-    Classical_Overall = overallscore(Classical_MSE, Classical_MAE, Classical_Max)
-    Cross_Overall = overallscore(Cross_MSE, Cross_MAE, Cross_Max)
+    Classical_Overall = overallscore(Classical_MAE, Classical_Max)
+    Cross_Overall = overallscore(Cross_MAE, Cross_Max)
     if Classical_Overall < Cross_Overall:
         print("Classical")
         if Classical_Overall<lowest_score:
