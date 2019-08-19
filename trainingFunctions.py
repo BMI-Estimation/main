@@ -49,22 +49,20 @@ def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames)
 		Proposed_Model = load_model(fileNames["directory"] + fileNames["Best_Cross"])
 
 	Y_Proposed_Test = Proposed_Model.predict(X_test)
-	plt.scatter(Y_Proposed_Test, Y_test)
-	plt.plot([Y_Proposed_Test.min(), Y_Proposed_Test.max()], [Y_Proposed_Test.min(), Y_Proposed_Test.max()], 'k--', lw=4)
+	plt.scatter(Y_test, Y_Proposed_Test)
+	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
 	plt.xlabel('Measured')
 	plt.ylabel('Predicted')
 	plt.title('Final Model - Test Data')
 	plt.show()
-
 	# Results
 	Y_Proposed = Proposed_Model.predict(X_Unseen)
-	plt.scatter(Y_Proposed, Y_Unseen)
-	plt.plot([Y_Proposed.min(), Y_Proposed.max()], [Y_Proposed.min(), Y_Proposed.max()], 'k--', lw=4)
+	plt.scatter(Y_Unseen, Y_Proposed)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
 	plt.xlabel('Measured')
 	plt.ylabel('Predicted')
 	plt.title('Final Model - Unseen Data')
 	plt.show()
-
 	return
 
 # Model selection
@@ -153,7 +151,7 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	
 	infoFile.write(str(best_scores))
 	infoFile.write(str('\n'))
-	infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs']}))
+	infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
 	infoFile.close()
 	return
 
@@ -180,7 +178,7 @@ def trainHeight(X, Y, args, fileNames):
 	print("[INFO] Training Against Height")
 	# Initialise Models and Folder Structure
 	inputDim = 2
-	neuronsPerLayerExceptOutputLayer = [3, 2]
+	neuronsPerLayerExceptOutputLayer = [4, 3, 2]
 	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
 	Classic_Model = build()
 	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
