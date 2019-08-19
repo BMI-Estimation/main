@@ -98,6 +98,7 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 
 	# finding optimal model
 	for x in range(args["number"]):
+		np.random.seed(x)
 		# classic test split
 		X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
 		history = Classic_Model.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
