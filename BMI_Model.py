@@ -13,15 +13,30 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
+import argparse
+#argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
+ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False, default=False, help="Train using BMI.")
+args = vars(ap.parse_args())
 # Required files
 Front_input_file = "Front_Model.csv"
 Side_input_file = "Side_Model.csv"
-Front_Model_file = 'Final_Model_Front.h5'
-Side_Model_file = 'Final_Model_Side_1.h5'
+# Front_Model_file = 'Final_Model_Front.h5'
+# Side_Model_file = 'Final_Model_Side_1.h5'
 Final_BMI_Model = 'Final_Model_BMI.h5'
 Low_Score_File = 'Lowest_Score_BMI.txt'
 Classic_Model_File = 'Classical_BMI.h5'
 Cross_Model_File = 'Cross_BMI.h5'
+if args["mass"]:
+    Front_Model_file = 'Mass_Model_Front.h5'
+    Side_Model_file = 'Mass_Model_Side.h5'
+    Height_Model_file = 'Height_Model.h5'
+    train_mass = True
+elif args["BMI"]:
+    Front_Model_file = 'Final_Model_Front.h5'
+    Side_Model_file = 'Final_Model_Side_1.h5'
+    train_mass = False
 
 # load dataset inputs
 dataframe_traning_Side = open(Side_input_file, 'r')
@@ -38,6 +53,15 @@ Input_parameters_Side = [row for index, row in enumerate(Input_parameters_Side) 
 Input_parameters_Side = np.asarray(Input_parameters_Side)
 Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front) if index not in badDataIndex]
 Input_parameters_Front = np.asarray(Input_parameters_Front)
+
+#height related functionality
+if train_mass==True:
+    Height_Side = Input_parameters_Side[:,1]
+    Height_Front = Input_parameters_Front[:,1]
+    Height = np.column_stack((Height_Front,Height_Side))
+    Height_Model = load_model(Height_Model_file)
+    Height_predictions = Height_Model.predict(Height)
+
 
 #load dataset BMI
 BMI_file = "BMI.csv"
@@ -57,6 +81,9 @@ Side_Model = load_model(Side_Model_file)
 #Get respective predictions
 Y_Side = Side_Model.predict(Input_parameters_Side)
 Y_Front = Front_Model.predict(Input_parameters_Front)
+if train_mass==True:
+    Y_Side = Y_Side/(Height*Height)
+    Y_Front = Y_Front*(Height*Height)
 # split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
