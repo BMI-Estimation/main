@@ -5,6 +5,7 @@ import cv2
 from binaryMask import mask2binary
 from boundingBoxes import midpoint
 from personMetrics import personArea
+from trainingFunctions import overallscore
 
 class TestBinaryMaskMethods(unittest.TestCase):
 	def test_mask2binary(self):
@@ -41,7 +42,7 @@ class TestBoundingBoxMethods(unittest.TestCase):
 		self.assertEqual(midpoint([0,0] , [0, 5]), (0, 2.5))
 		self.assertEqual(midpoint([0,0] , [5, 0]), (2.5, 0))
 
-class TestFindPerson(unittest.TestCase):
+class TestPersonMetrics(unittest.TestCase):
   def test_personArea(self):
     w, h = 512, 512
     data = np.zeros((h,w), dtype=np.uint8)
@@ -51,6 +52,22 @@ class TestFindPerson(unittest.TestCase):
     resultImg = np.array(resultImg)
     # at 1m per pixel length, this should translate to 10000m^2
     self.assertEqual(personArea(resultImg, 1), 10000)
+
+class TestTrainingFunctions(unittest.TestCase):
+  def test_overallscore(self):
+    # when MAE > 4, no extra weighting is granted
+    self.assertEqual(overallscore(5, 10), 0.5)
+    self.assertEqual(overallscore(4, 8), 0.5)
+    # every 1 MAE under 4 relates to an extra point of weighting
+    self.assertEqual(overallscore(3, 6), 1.5)
+    self.assertEqual(overallscore(2,4), 2.5)
+    self.assertEqual(overallscore(1,2), 3.5)
+    self.assertEqual(overallscore(1,1), 4)
+    self.assertEqual(overallscore(0.5,0.5), 4.5)
+
+
+
+
 
 if __name__ == '__main__':
 	unittest.main()
