@@ -15,29 +15,34 @@ from sklearn.metrics import max_error
 import csv
 import argparse
 from scipy.interpolate import interp1d
+import os
+import datetime
 #argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
 ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False, default=False, help="Train using BMI.")
 args = vars(ap.parse_args())
+
 # Required files
 Front_input_file = "Front_Model.csv"
 Side_input_file = "Side_Model.csv"
-# Front_Model_file = 'Final_Model_Front.h5'
-# Side_Model_file = 'Final_Model_Side_1.h5'
 Final_BMI_Model = 'Final_Model_BMI.h5'
 Low_Score_File = 'Lowest_Score_BMI.txt'
 Classic_Model_File = 'Classical_BMI.h5'
 Cross_Model_File = 'Cross_BMI.h5'
+Best_Classic_File = 'Best_Classic.h5'
+Best_Cross_File = 'Best_Cross.h5'
 if args["mass"]:
     Front_Model_file = 'Mass_Model_Front.h5'
     Side_Model_file = 'Mass_Model_Side.h5'
     Height_Model_file = 'Height_Model.h5'
     train_mass = True
+    Path_Extension = '/Mass/'
 elif args["BMI"]:
     Front_Model_file = 'Final_Model_Front.h5'
     Side_Model_file = 'Final_Model_Side_1.h5'
     train_mass = False
+    Path_Extension = '/BMI/'
 
 # load dataset inputs
 dataframe_traning_Side = open(Side_input_file, 'r')
@@ -72,25 +77,23 @@ BMI = [[float(entry) for entry in row] for row in reader]
 BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
-print(BMI)
-print('F', Input_parameters_Front)
-print('S', Input_parameters_Side)
-print('FL', len(Input_parameters_Front), 'SL', len(Input_parameters_Side), 'BL', len(BMI))
+
 #Load front and side models
 Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
+
 #Get respective predictions
 Y_Side = Side_Model.predict(Input_parameters_Side)
 Y_Front = Front_Model.predict(Input_parameters_Front)
 if train_mass==True:
     Y_Side = Y_Side/(Height*Height)
     Y_Front = Y_Front*(Height*Height)
+
 # split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
-#print(X)
 Y= Y.reshape(-1,1)
-#print(Y)
+
 # define base model
 def baseline_model():
 	# create model
@@ -101,24 +104,38 @@ def baseline_model():
     regressor.add(Dense(units=1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
     return regressor
-#Get current best model score
-score_file = pandas.read_csv(Low_Score_File,sep=" ",header=None,names=None)
-Lowest_score_data = score_file.values
-Lowest_score_array = Lowest_score_data[:1]
-lowest_score = Lowest_score_array.item(0)
+
+#Classic and cross model creation
 Regressor= baseline_model()
 Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=500, batch_size=5, verbose=1)
-progress = []
+
+#Directory functionality
+NetworkArc = [str(row.units) for row in Regressor.model.layers]
+NetworkArc = '-'.join(NetworkArc)
+today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
+directory = 'models/' + today + '/Height/' + NetworkArc + '/'
+os.makedirs(directory)
+
+#create infofiles
+infoFile = open(directory + 'info.txt', 'w', newline='')
+
 #Separate file data into seen and unseen data prior to model comparison
 seed = 10
 np.random.seed(seed)
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
-# Model selection
+
+# score initialisation
 def overallscore(MAE, Max):
 	if MAE < 4:
 		m = interp1d([0,4],[4,0])
 		return MAE/Max + m(MAE)
 	else: return MAE/Max
+bestscores = {}
+best_class_score = 0
+best_cross_score = 0
+ClassHistory = None
+CrossHistory = None
+
 #finding optimal model
 for x in range(3):
     np.random.seed(x)
@@ -126,29 +143,29 @@ for x in range(3):
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
     history = Regressor.fit(X_train, Y_train, batch_size=5, epochs=500, verbose=1, validation_data=(X_test, Y_test))
     # loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train','test'], loc='upper left')
-    plt.show()
+    # plt.plot(history.history['loss'])
+    # plt.plot(history.history['val_loss'])
+    # plt.title('model loss')
+    # plt.ylabel('loss')
+    # plt.xlabel('epoch')
+    # plt.legend(['train','test'], loc='upper left')
+    # plt.show()
     # mean absolute error
-    plt.plot(history.history['mean_absolute_error'])
-    plt.plot(history.history['val_mean_absolute_error'])
-    plt.title('Mean absolute error')
-    plt.ylabel('MAE')
-    plt.xlabel('epoch')
-    plt.legend(['train','test'], loc='upper left')
-    plt.show()
+    # plt.plot(history.history['mean_absolute_error'])
+    # plt.plot(history.history['val_mean_absolute_error'])
+    # plt.title('Mean absolute error')
+    # plt.ylabel('MAE')
+    # plt.xlabel('epoch')
+    # plt.legend(['train','test'], loc='upper left')
+    # plt.show()
     Y_Classic = Regressor.predict(X_test)
-    print(Y_Classic)
-    plt.scatter(Y_test, Y_Classic)
-    plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-    plt.xlabel('Measured')
-    plt.ylabel('Predicted')
-    plt.title('Classic method prediction')
-    plt.show()
+    # print(Y_Classic)
+    # plt.scatter(Y_test, Y_Classic)
+    # plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+    # plt.xlabel('Measured')
+    # plt.ylabel('Predicted')
+    # plt.title('Classic method prediction')
+    # plt.show()
     #evaluate model with dataset
     # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
     Regressor.model.save(Classic_Model_File)
@@ -167,31 +184,32 @@ for x in range(3):
     # Optimal estimator extraction
     Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
     estimator_array = Cross_Val['estimator']
+    results = Cross_Val['test_score']
     Cross_val_estimator = estimator_array[9]
     Cross_val_estimator.model.save(Cross_Model_File)
     # Assessing optimal model
     Final = load_model(Cross_Model_File)
     Y_Cross_Val = Final.predict(X_test)
-    #scatter cross val
-    plt.scatter(Y_test, Y_Cross_Val)
-    plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-    plt.xlabel('Measured')
-    plt.ylabel('Predicted')
-    plt.title('Cross method prediction')
-    plt.show()
-    plt.plot(Y_test)
-    plt.plot(Y_Classic)
-    plt.plot(Y_Cross_Val)
-    plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-    plt.show()
+    # #scatter cross val
+    # plt.scatter(Y_test, Y_Cross_Val)
+    # plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+    # plt.xlabel('Measured')
+    # plt.ylabel('Predicted')
+    # plt.title('Cross method prediction')
+    # plt.show()
+    # plt.plot(Y_test)
+    # plt.plot(Y_Classic)
+    # plt.plot(Y_Cross_Val)
+    # plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+    # plt.show()
     # unseen data tests
     Y_Unseen_Classical = Regressor.predict(X_Unseen)
     Y_Unseen_Cross = Final.predict(X_Unseen)
-    plt.plot(Y_Unseen)
-    plt.plot(Y_Unseen_Classical)
-    plt.plot(Y_Unseen_Cross)
-    plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-    plt.show()
+    # plt.plot(Y_Unseen)
+    # plt.plot(Y_Unseen_Classical)
+    # plt.plot(Y_Unseen_Cross)
+    # plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
+    # plt.show()
     # Performance indicators
     Classical_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Classical)
     Cross_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Cross)
@@ -206,21 +224,21 @@ for x in range(3):
     save = input("Save model?")
     Classical_Overall = overallscore(Classical_MAE, Classical_Max)
     Cross_Overall = overallscore(Cross_MAE, Cross_Max)
-    if Classical_Overall < Cross_Overall:
-        print("Classical")
-        if Classical_Overall<lowest_score:
-            Regressor.model.save(Final_BMI_Model)
-            lowest_score=Classical_Overall
-            print("new model "+ str(lowest_score))
-            progress.append(lowest_score)
-    else:
-        print("Cross")
-        if Cross_Overall<lowest_score:
-            Final.model.save(Final_BMI_Model)
-            lowest_score = Cross_Overall
-            print("new model "+ str(lowest_score))
-            progress.append(lowest_score)
-print(progress)
+    if Classical_Overall > best_class_score:
+        Regressor.model.save(directory + Best_Classic_File)
+        bestscores['Classical'] = [Classical_MAE, Classical_Max]
+        best_class_score = Classical_Overall
+        ClassHistory = history
+
+    if Cross_Overall > best_cross_score:
+        Final.model.save(directory + Best_Cross_File)
+        bestscores['Cross'] = [Cross_MAE, Cross_Max]
+        best_cross_score = Cross_Overall
+        CrossHistory = results
+infoFile.write(str(bestscores))
+infoFile.write(str('\n'))
+infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
+infoFile.close()
 Proposed_Model = load_model(Final_BMI_Model)
 Y_Proposed = Proposed_Model.predict(X_Unseen)
 plt.plot(Y_Unseen)
@@ -233,7 +251,4 @@ plt.xlabel('Measured')
 plt.ylabel('Predicted')
 plt.title('Final method prediction')
 plt.show()
-score_file = open(Low_Score_File,"w")
-score_file.write(str(lowest_score))
-score_file.close()
-print(lowest_score)
+
