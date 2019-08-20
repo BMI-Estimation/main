@@ -4,7 +4,7 @@ from PIL import Image
 import cv2
 from binaryMask import mask2binary
 from boundingBoxes import midpoint
-from personMetrics import personArea
+from personMetrics import personArea, maskThickness
 from trainingFunctions import overallscore
 
 class TestBinaryMaskMethods(unittest.TestCase):
@@ -65,9 +65,23 @@ class TestTrainingFunctions(unittest.TestCase):
     self.assertEqual(overallscore(1,1), 4)
     self.assertEqual(overallscore(0.5,0.5), 4.5)
 
-
-
-
+  def test_maskthickness(self):
+    w, h = 512, 512
+    data = np.zeros((h,w), dtype=np.uint8)
+    # 100 by 100 pixel square
+    data[100:200, 100:200] = 255
+    resultImg = Image.fromarray(data, 'L')
+    resultImg = np.array(resultImg)
+    output = maskThickness(resultImg, 1)
+    # area
+    self.assertEqual(output[0], 10000)
+    # height
+    self.assertEqual(output[1], 100)
+    # 4 max slices of 100 width square
+    self.assertEqual(output[2], 100)
+    self.assertEqual(output[3], 100)
+    self.assertEqual(output[4], 100)
+    self.assertEqual(output[5], 100)
 
 if __name__ == '__main__':
 	unittest.main()

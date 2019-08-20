@@ -1,7 +1,4 @@
 import numpy as np
-from keras.models import load_model, Sequential
-from keras.layers import Dense
-from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, max_error
@@ -12,21 +9,24 @@ import datetime
 
 # define base model
 def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
+	from keras.models import Sequential
+	from keras.layers import Dense
 	# create model
 	def build_fn():
 		regressor = Sequential()
 		regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=inputDim, activation="relu"))
-
+		
 		for units in neuronsPerLayerExceptOutputLayer[1:]:
 			regressor.add(Dense(units, activation="relu"))
-	
+			
 		regressor.add(Dense(1, activation="linear"))
 		regressor.compile(optimizer='adam', loss='mean_absolute_error')
 		return regressor
-	
+		
 	return build_fn
 
 def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames):
+	from keras.models import load_model
 	if is_class:
 		# loss
 		plt.plot(history.history['loss'])
@@ -73,6 +73,7 @@ def overallscore(MAE, Max):
 	else: return MAE/Max
 
 def train(X, Y, args, CM, CVR , fileNames, infoFile):
+	from keras.models import load_model
 	Classic_Model = CM
 	Cross_Val_Regressor = CVR
 	best_scores = {}
@@ -156,6 +157,7 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	return
 
 def trainWithBMI(X, Y, args, fileNames):
+	from keras.wrappers.scikit_learn import KerasRegressor
 	# Initialise Models and Folder Structure
 	inputDim = 6
 	neuronsPerLayerExceptOutputLayer = [7, 4]
@@ -175,6 +177,7 @@ def trainWithBMI(X, Y, args, fileNames):
 	return
 
 def trainHeight(X, Y, args, fileNames):
+	from keras.wrappers.scikit_learn import KerasRegressor
 	print("[INFO] Training Against Height")
 	# Initialise Models and Folder Structure
 	inputDim = 2
@@ -196,6 +199,7 @@ def trainHeight(X, Y, args, fileNames):
 	return
 
 def trainMass(X, Y, args, fileNames):
+	from keras.wrappers.scikit_learn import KerasRegressor
 	print("[INFO] Training Against Mass")
 	# Initialise Models and Folder Structure
 	inputDim = 6
