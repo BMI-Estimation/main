@@ -110,3 +110,5 @@ mask_rcnn_coco.h5
 *.jpeg
 .idea/
 *.h5
+*.jpg
+*.csv
