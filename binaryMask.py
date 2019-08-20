@@ -7,13 +7,3 @@ def mask2binary(img):
   retval, binImage = cv2.threshold(gray, 0, 1, cv2.THRESH_BINARY)
   binImage = np.where(binImage > 0, 255, 0).astype('uint8')
   return binImage
-
-def findBinaryImageEdges(img):
-  edged = cv2.Canny(img, 100, 110)
-  edged = closeImage(edged, 100)
-  contours = returnContours(edged)
-  contours = sorted(contours, key=lambda x: cv2.contourArea(x))
-  return edged, contours[-1]
-
-
-

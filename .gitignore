@@ -107,6 +107,7 @@ person.csv
 mask_rcnn_coco.h5
 *.csv
 *.jpg
+*.png
 *.jpeg
 .idea/
 *.h5
