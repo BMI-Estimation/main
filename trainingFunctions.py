@@ -15,14 +15,11 @@ def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
 	def build_fn():
 		regressor = Sequential()
 		regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=inputDim, activation="relu"))
-		
 		for units in neuronsPerLayerExceptOutputLayer[1:]:
 			regressor.add(Dense(units, activation="relu"))
-			
 		regressor.add(Dense(1, activation="linear"))
 		regressor.compile(optimizer='adam', loss='mean_absolute_error')
 		return regressor
-		
 	return build_fn
 
 def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames):

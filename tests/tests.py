@@ -5,7 +5,7 @@ import cv2
 from binaryMask import mask2binary
 from boundingBoxes import midpoint
 from personMetrics import personArea, maskThickness
-from trainingFunctions import overallscore
+from trainingFunctions import overallscore, baseline_model
 
 class TestBinaryMaskMethods(unittest.TestCase):
 	def test_mask2binary(self):
@@ -82,6 +82,12 @@ class TestTrainingFunctions(unittest.TestCase):
     self.assertEqual(output[3], 100)
     self.assertEqual(output[4], 100)
     self.assertEqual(output[5], 100)
+
+  def test_baselineModel(self):
+    build_fn = baseline_model(1,[3,2])
+    test_model = build_fn()
+    NetworkArc = [row.units for row in test_model.model.layers]
+    self.assertEqual(NetworkArc, [3,2,1])
 
 if __name__ == '__main__':
 	unittest.main()
