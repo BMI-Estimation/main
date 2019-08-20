@@ -30,9 +30,9 @@ def gen():
 		if os.path.isdir('images/' + filename):
 			continue
 		name = 'images/' + filename
-		if 'F' in filename:
+		if 'F' in filename or 'f' in filename:
 			listOfFrontImageNames.append(name)
-		elif 'S' in filename:
+		elif 'S' in filename or 's' in filename:
 			listOfSideImageNames.append(name)
 
 	print('[INFO] Extracting Widths From Front Image')

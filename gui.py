@@ -6,9 +6,9 @@ from BMI_Estimation import detect
 
 def Image_Segmentation_Data_Extraction(listOfImages):
     for image in listOfImages:
-        if 'F' in image:
+        if 'F' in image or 'f' in image:
             Front = image
-        elif 'S' in image:
+        elif 'S' in image or 's' in image:
             Side = image
     arguments = {
                     "width": RefObjectWidth.get(),
