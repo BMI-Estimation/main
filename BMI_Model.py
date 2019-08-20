@@ -21,6 +21,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
 ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False, default=False, help="Train using BMI.")
 ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
+ap.add_argument("-bs", "--batch", type=int, required=True, help="Batch Size.")
+ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
 args = vars(ap.parse_args())
 
 # Required files
@@ -107,7 +109,7 @@ def baseline_model():
 
 #Classic and cross model creation
 Regressor= baseline_model()
-Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=500, batch_size=5, verbose=1)
+Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
 #Directory functionality
 NetworkArc = [str(row.units) for row in Regressor.model.layers]
@@ -198,7 +200,7 @@ for x in range(3):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
-    history = Regressor.fit(X_train, Y_train, batch_size=5, epochs=500, verbose=1, validation_data=(X_test, Y_test))
+    history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
     Y_Classic = Regressor.predict(X_test)
     Regressor.model.save(Classic_Model_File)
     kfold = KFold(n_splits=10, random_state=x)
