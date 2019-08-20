@@ -96,14 +96,16 @@ X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
 Y= Y.reshape(-1,1)
 
+#model dimensions
+neuronsPerLayerExceptOutputLayer = [4, 3, 2]
 # define base model
 def baseline_model():
 	# create model
-    regressor = Sequential()
-    regressor.add(Dense(units=10, input_dim=2, activation="relu"))
-    regressor.add(Dense(units=6, activation="relu"))
-    regressor.add(Dense(units=4, activation="relu"))
-    regressor.add(Dense(units=1, activation="linear"))
+    regressor = Sequential(neuronsPerLayerExceptOutputLayer)
+    regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=2, activation="relu"))
+    for units in neuronsPerLayerExceptOutputLayer[1:]:
+        regressor.add(Dense(units, activation="relu"))
+    regressor.add(Dense(1, activation="linear"))
     regressor.compile(optimizer='adam', loss='mean_absolute_error')
     return regressor
 
