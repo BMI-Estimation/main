@@ -3,7 +3,6 @@ import pandas
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -21,6 +20,7 @@ import datetime
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
 ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False, default=False, help="Train using BMI.")
+ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
 args = vars(ap.parse_args())
 
 # Required files
@@ -102,7 +102,7 @@ def baseline_model():
     regressor.add(Dense(units=6, activation="relu"))
     regressor.add(Dense(units=4, activation="relu"))
     regressor.add(Dense(units=1, activation="linear"))
-    regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae', 'mse'])
+    regressor.compile(optimizer='adam', loss='mean_absolute_error')
     return regressor
 
 #Classic and cross model creation
@@ -136,80 +136,86 @@ best_cross_score = 0
 ClassHistory = None
 CrossHistory = None
 
+#Visualisation functions
+def showGraphs( history, Y_Classic, Y_Test,records,Y_Cross):
+    # loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train','test'], loc='upper left')
+    plt.show()
+
+    # Cross validation model analysis (loss)
+    plt.plot(results)
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('Fold')
+    plt.legend(['train'], loc='upper left')
+    plt.show()
+
+    #Classic scatter
+    plt.scatter(Y_test, Y_Classic)
+    plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+    plt.xlabel('Measured')
+    plt.ylabel('Predicted')
+    plt.title('Classic Model - Test Data')
+    plt.show()
+
+    #Cross scatter
+    plt.scatter(Y_test, Y_Cross)
+    plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+    plt.xlabel('Measured')
+    plt.ylabel('Predicted')
+    plt.title('Cross Model - Test Data')
+    plt.show()
+    return
+
+
+
+def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross):
+
+	#Best Classic
+	plt.scatter(Y_test, Y_Best_Classic)
+	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Classic')
+	plt.show()
+
+	# Best Cross
+	plt.scatter(Y_Unseen, Y_Best_Cross)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Cross')
+	plt.show()
+	return
+
 #finding optimal model
 for x in range(3):
     np.random.seed(x)
     # classic test split
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
     history = Regressor.fit(X_train, Y_train, batch_size=5, epochs=500, verbose=1, validation_data=(X_test, Y_test))
-    # loss
-    # plt.plot(history.history['loss'])
-    # plt.plot(history.history['val_loss'])
-    # plt.title('model loss')
-    # plt.ylabel('loss')
-    # plt.xlabel('epoch')
-    # plt.legend(['train','test'], loc='upper left')
-    # plt.show()
-    # mean absolute error
-    # plt.plot(history.history['mean_absolute_error'])
-    # plt.plot(history.history['val_mean_absolute_error'])
-    # plt.title('Mean absolute error')
-    # plt.ylabel('MAE')
-    # plt.xlabel('epoch')
-    # plt.legend(['train','test'], loc='upper left')
-    # plt.show()
     Y_Classic = Regressor.predict(X_test)
-    # print(Y_Classic)
-    # plt.scatter(Y_test, Y_Classic)
-    # plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-    # plt.xlabel('Measured')
-    # plt.ylabel('Predicted')
-    # plt.title('Classic method prediction')
-    # plt.show()
-    #evaluate model with dataset
-    # estimator = KerasRegressor(build_fn=baseline_model, epochs=100, batch_size=10, verbose=1)
     Regressor.model.save(Classic_Model_File)
-    # estimator.model = load_model(Classic_Model_File)
     kfold = KFold(n_splits=10, random_state=x)
-    # results = cross_val_score(estimator, X, Y, cv=kfold)
-    # print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
-    # print(results)
-    # #Cross validation model analysis (loss)
-    # plt.plot(abs(results))
-    # plt.title('model loss')
-    # plt.ylabel('loss')
-    # plt.xlabel('Fold')
-    # plt.legend(['train'], loc='upper left')
-    # plt.show()
+
+    #Cross validation
     # Optimal estimator extraction
     Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
     estimator_array = Cross_Val['estimator']
     results = Cross_Val['test_score']
-    Cross_val_estimator = estimator_array[9]
+    Cross_val_estimator = estimator_array[-1]
     Cross_val_estimator.model.save(Cross_Model_File)
     # Assessing optimal model
-    Final = load_model(Cross_Model_File)
-    Y_Cross_Val = Final.predict(X_test)
-    # #scatter cross val
-    # plt.scatter(Y_test, Y_Cross_Val)
-    # plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-    # plt.xlabel('Measured')
-    # plt.ylabel('Predicted')
-    # plt.title('Cross method prediction')
-    # plt.show()
-    # plt.plot(Y_test)
-    # plt.plot(Y_Classic)
-    # plt.plot(Y_Cross_Val)
-    # plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-    # plt.show()
+    Cross_model = load_model(Cross_Model_File)
+    Y_Cross_Val = Cross_model.predict(X_test)
     # unseen data tests
     Y_Unseen_Classical = Regressor.predict(X_Unseen)
-    Y_Unseen_Cross = Final.predict(X_Unseen)
-    # plt.plot(Y_Unseen)
-    # plt.plot(Y_Unseen_Classical)
-    # plt.plot(Y_Unseen_Cross)
-    # plt.legend(['Actual','Classical','Cross Validation'], loc='upper left')
-    # plt.show()
+    Y_Unseen_Cross = Cross_model.predict(X_Unseen)
     # Performance indicators
     Classical_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Classical)
     Cross_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Cross)
@@ -231,24 +237,17 @@ for x in range(3):
         ClassHistory = history
 
     if Cross_Overall > best_cross_score:
-        Final.model.save(directory + Best_Cross_File)
+        Cross_model.model.save(directory + Best_Cross_File)
         bestscores['Cross'] = [Cross_MAE, Cross_Max]
         best_cross_score = Cross_Overall
         CrossHistory = results
+    if args["visualize"]:showGraphs(history,Y_Classic,Y_Cross_Val)
+Best_Classic_Model = load_model(directory+Best_Classic_File)
+Best_Cross_Model = load_model(directory+Best_Cross_File)
+Y_Proposed_Classic = Best_Classic_Model.predict(X_Unseen)
+Y_Proposed_Cross = Best_Cross_Model.predict(X_Unseen)
 infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
 infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
 infoFile.close()
-Proposed_Model = load_model(Final_BMI_Model)
-Y_Proposed = Proposed_Model.predict(X_Unseen)
-plt.plot(Y_Unseen)
-plt.plot(Y_Proposed)
-plt.legend(['Actual', 'Model'], loc='upper left')
-plt.show()
-plt.scatter(Y_Unseen, Y_Proposed)
-plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
-plt.xlabel('Measured')
-plt.ylabel('Predicted')
-plt.title('Final method prediction')
-plt.show()
-
+Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross)
