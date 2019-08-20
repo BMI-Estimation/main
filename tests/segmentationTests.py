@@ -4,6 +4,7 @@ from PIL import Image
 import cv2
 from binaryMask import mask2binary
 from boundingBoxes import midpoint
+from personMetrics import personArea
 
 class TestBinaryMaskMethods(unittest.TestCase):
 	def test_mask2binary(self):
@@ -39,6 +40,17 @@ class TestBoundingBoxMethods(unittest.TestCase):
 		self.assertEqual(midpoint([0,0] , [10, 10]), (5,5))
 		self.assertEqual(midpoint([0,0] , [0, 5]), (0, 2.5))
 		self.assertEqual(midpoint([0,0] , [5, 0]), (2.5, 0))
+
+class TestFindPerson(unittest.TestCase):
+  def test_personArea(self):
+    w, h = 512, 512
+    data = np.zeros((h,w), dtype=np.uint8)
+    # 100 by 100 pixel square
+    data[100:200, 100:200] = 255
+    resultImg = Image.fromarray(data, 'L')
+    resultImg = np.array(resultImg)
+    # at 1m per pixel length, this should translate to 10000m^2
+    self.assertEqual(personArea(resultImg, 1), 10000)
 
 if __name__ == '__main__':
 	unittest.main()
