@@ -1,4 +1,4 @@
-from edgeDetection import gray2binaryEdgedImage, returnContours
+from edgeDetection import gray2binaryEdgedImage, returnContours, detectRectangle
 import cv2
 from boundingBoxes import findBoundingBox, drawBoundingBoxes
 from binaryMask import mask2binary
@@ -29,17 +29,8 @@ def extractObjectForegroundMask(img, box):
 	return img
 
 def findReferenceObject(clone, width, show, mask):
-	# convert image to grayscale, and blur it to remove some noise
-	gray = blurImage(clone)
-	# perform edge detection, then rough image closing to complete edges
-	edged = gray2binaryEdgedImage(gray)
-	# extract contours
-	contours = returnContours(edged)
+	contours = detectRectangle(clone)
 	pixelsPerMetric = None
-
-	# if the contour is not sufficiently large, ignore it
-	contours = [c for c in contours if cv2.contourArea(c) > 2000]
-	# loop over the contours individually
 	orig = clone.copy()
 	# draw the outline of the contour's bounding box
 	box = findBoundingBox(contours[0])

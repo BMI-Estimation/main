@@ -63,7 +63,10 @@ def detect(args):
 	print('[INFO] Finding Front and Side Masks')
 	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage], args)
 	print('[INFO] Extracting Front and Side Dimensions')
-	dimensions = maskThickness(listOfBinMasks, listOfPixelsPerMetric)
+	dimensions = []
+	
+	for mask, ppm in zip(listOfBinMasks,listOfPixelsPerMetric):
+		dimensions.append(maskThickness(mask, ppm))
 	frontImageDimensions = dimensions[0]
 	sideImageDimensions = dimensions[1]
 	cv2.destroyAllWindows()
@@ -71,8 +74,11 @@ def detect(args):
 	return frontImageDimensions, sideImageDimensions
 
 def extractMasks(listOfImages, args):
-	listOfBinMasks = persons(listOfImages, args["visualise"], args["mask"])
-	listOfPixelsPerMetric = findRef(listOfImages, args["width"], args["visualise"], args["mask"], [args['fimg'], args['simg']])
+	listOfBinMasks = []
+	listOfPixelsPerMetric = []
+	for image in listOfImages:
+		listOfBinMasks.append(persons(image, args["visualise"], args["mask"]))
+		listOfPixelsPerMetric.append(findRef(image, args["width"], args["visualise"], args["mask"]))
 	return listOfPixelsPerMetric, listOfBinMasks
 
 if __name__ == "__main__" : gen()
