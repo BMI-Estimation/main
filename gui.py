@@ -6,7 +6,7 @@ from BMI_Estimation import detect
 
 def Image_Segmentation_Data_Extraction(listOfImages):
 	arguments = {}
-	
+
 	for image in listOfImages:
 		if 'F' in image or 'f' in image:
 			arguments["fimg"] = image
@@ -25,7 +25,12 @@ def Image_Segmentation_Data_Extraction(listOfImages):
 	return frontImageDimensions, sideImageDimensions
 
 def Predict_BMI(frontImageDimensions, sideImageDimensions):
-	print(frontImageDimensions, sideImageDimensions)
+	if UseOnlyFrontImage.get():
+		print("[INFO] Predicting Using Front Model Only", frontImageDimensions)
+	elif UseOnlySideImage.get():
+		print("[INFO] Predicting Using Side Model Only", sideImageDimensions)
+	else:
+		print(frontImageDimensions, sideImageDimensions)
 	return
 
 class Application(tk.Frame):
