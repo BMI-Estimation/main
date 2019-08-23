@@ -25,13 +25,17 @@ def Image_Segmentation_Data_Extraction(listOfImages):
 	return frontImageDimensions, sideImageDimensions
 
 def Predict_BMI(frontImageDimensions, sideImageDimensions):
+	BMI = None
 	if UseOnlyFrontImage.get():
 		print("[INFO] Predicting Using Front Model Only", frontImageDimensions)
+		BMI = frontImageDimensions[0]
 	elif UseOnlySideImage.get():
 		print("[INFO] Predicting Using Side Model Only", sideImageDimensions)
+		BMI = sideImageDimensions[0]
 	else:
 		print(frontImageDimensions, sideImageDimensions)
-	return
+		BMI = frontImageDimensions[0]
+	return BMI
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -107,7 +111,8 @@ class Application(tk.Frame):
 	def start(self):
 		frontImageDimensions, sideImageDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
 		print('[INFO] Image Segmentation Completed')
-		Predict_BMI(frontImageDimensions, sideImageDimensions)
+		BMI = Predict_BMI(frontImageDimensions, sideImageDimensions)
+		self.Prediction.config(text="\tYour BMI is " + str(BMI))
 		print('[INFO] BMI Prediction Completed')
 	
 	def UseOnlyOneImage(self):
