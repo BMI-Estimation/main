@@ -30,6 +30,11 @@ def extractObjectForegroundMask(img, box):
 
 def findReferenceObject(clone, width, show, mask):
 	contours = detectRectangle(clone)
+	if contours ==[]:
+		gray = blurImage(clone)
+		edged = gray2binaryEdgedImage(gray)
+		contours = returnContours(edged)
+		contours = [c for c in contours if cv2.contourArea(c)>2000]
 	pixelsPerMetric = None
 	orig = clone.copy()
 	# draw the outline of the contour's bounding box
