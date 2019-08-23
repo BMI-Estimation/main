@@ -149,7 +149,7 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	
 	infoFile.write(str(best_scores))
 	infoFile.write(str('\n'))
-	infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
+	infoFile.write(str({'Number Of Iterations': args["number"], 'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
 	infoFile.close()
 	return
 
