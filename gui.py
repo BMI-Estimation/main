@@ -5,16 +5,16 @@ from PIL import Image, ImageTk
 from BMI_Estimation import detect
 
 def Image_Segmentation_Data_Extraction(listOfImages):
+	arguments = {}
+
 	for image in listOfImages:
 		if 'F' in image or 'f' in image:
-			Front = image
+			arguments["fimg"] = image
 		elif 'S' in image or 's' in image:
-			Side = image
-	arguments = {
-								"width": RefObjectWidth.get(),
-								"fimg": Front,
-								"simg": Side
-							}
+			arguments["simg"] = image
+		
+	arguments["width"] = RefObjectWidth.get()
+
 	if ShowMasks.get(): arguments["mask"] = True
 	else: arguments["mask"] = False
 
@@ -25,8 +25,17 @@ def Image_Segmentation_Data_Extraction(listOfImages):
 	return frontImageDimensions, sideImageDimensions
 
 def Predict_BMI(frontImageDimensions, sideImageDimensions):
-	print(frontImageDimensions, sideImageDimensions)
-	return
+	BMI = None
+	if UseOnlyFrontImage.get():
+		print("[INFO] Predicting Using Front Model Only", frontImageDimensions)
+		BMI = frontImageDimensions[0]
+	elif UseOnlySideImage.get():
+		print("[INFO] Predicting Using Side Model Only", sideImageDimensions)
+		BMI = sideImageDimensions[0]
+	else:
+		print(frontImageDimensions, sideImageDimensions)
+		BMI = frontImageDimensions[0]
+	return BMI
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -46,8 +55,13 @@ class Application(tk.Frame):
 		self.SelectImageFrame.grid(row=2, column=0)
 		self.CheckBoxFrame = tk.Frame(self)
 		self.CheckBoxFrame.grid(row=3, column=0)
-		self.StartProgram = tk.Button(self, text="Predict BMI", command=self.start)
-		self.StartProgram.grid(row=4, column=0)
+		self.BMIFrame = tk.Frame(self)
+		self.BMIFrame.grid(row=4, column=0)
+
+		self.StartProgram = tk.Button(self.BMIFrame, text="Predict BMI", command=self.start)
+		self.StartProgram.grid(row=0, column=0)
+		self.Prediction = tk.Label(self.BMIFrame, text="Not Predicted")
+		self.Prediction.grid(row=0, column=1)
 
 		self.RefObjectMeasurementLabel = tk.Label(self.RefObjectMeasurement, text="Width of Reference Object in meters: ")
 		self.RefObjectMeasurementLabel.grid(row=0, column=0)
@@ -97,7 +111,8 @@ class Application(tk.Frame):
 	def start(self):
 		frontImageDimensions, sideImageDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
 		print('[INFO] Image Segmentation Completed')
-		Predict_BMI(frontImageDimensions, sideImageDimensions)
+		BMI = Predict_BMI(frontImageDimensions, sideImageDimensions)
+		self.Prediction.config(text="\tYour BMI is " + str(BMI))
 		print('[INFO] BMI Prediction Completed')
 	
 	def UseOnlyOneImage(self):
