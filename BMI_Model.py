@@ -13,6 +13,7 @@ import argparse
 import os
 import datetime
 from trainingFunctions import overallscore, baseline_model
+from keras import optimizers
 #argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
@@ -68,12 +69,32 @@ if args["mass"]:
 	Height_Model = load_model(Height_Model_file)
 	Height_predictions = Height_Model.predict(Height)
 
+#Load front and side models
+Front_Model = load_model(Front_Model_file)
+Side_Model = load_model(Side_Model_file)
+
+#Get respective predictions
+Y_Side = Side_Model.predict(Input_parameters_Side)
+print(len(Y_Side))
+Y_Front = Front_Model.predict(Input_parameters_Front)
+print(len(Y_Front))
+
+diff = Y_Front - Y_Side
+diff = [i for i, dif in enumerate(diff) if dif > 5]
+Y_Front = [yf for i, yf in enumerate(Y_Front) if i not in diff]
+Y_Side = [ys for i, ys in enumerate(Y_Side) if i not in diff]
+
+Y_Front = np.asarray(Y_Front)
+Y_Side = np.asarray(Y_Side)
+
 #load dataset BMI
 BMI_file = "BMI.csv"
 dataframe_traning_outputs = open(BMI_file, 'r')
 reader = csv.reader(dataframe_traning_outputs, delimiter=",")
 BMI = [[float(entry) for entry in row] for row in reader]
 BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
+
+BMI = [b for i, b in enumerate(BMI) if i not in diff]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
 
@@ -98,7 +119,7 @@ Y= Y.reshape(-1,1)
 print(X)
 print(Y)
 #model dimensions
-neuronsPerLayerExceptOutputLayer = [2]
+neuronsPerLayerExceptOutputLayer = [1]
 save = input("continue")
 
 #Classic and cross model creation

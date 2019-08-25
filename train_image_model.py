@@ -8,6 +8,9 @@ ap.add_argument("-s", "--side", nargs='?', const=True, type=bool, required=False
 ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
 ap.add_argument("-he", "--height", nargs='?', const=True, type=bool, required=False, default=False, help="Train vs Height.")
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train vs Weight.")
+ap.add_argument("-fo", "--fold", type=int, required=True, help="Folds.")
+ap.add_argument("-st", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
+ap.add_argument("-d", "--drop", type=int, required=True, help="dropout")
 args = vars(ap.parse_args())
 
 if args["height"] and args["mass"]:

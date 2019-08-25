@@ -142,7 +142,10 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	for x in range(args["number"]):
 		np.random.seed(x)
 		# evaluate model with dataset for Cross Validation
-		kfold = KFold(n_splits=10, random_state=x)
+		if args['strat']:
+			kfold = args['fold']
+		else:
+			kfold = KFold(n_splits=args['fold'], random_state=x)
 		# Optimal estimator extraction
 		Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True, scoring='neg_mean_absolute_error')
 		results = Cross_Val["test_score"]
