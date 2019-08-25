@@ -104,7 +104,7 @@ Y= Y.reshape(-1,1)
 print(X)
 print(Y)
 #model dimensions
-neuronsPerLayerExceptOutputLayer = [2,1]
+neuronsPerLayerExceptOutputLayer = [2]
 save = input("continue")
 # define base model
 def baseline_model():
@@ -268,7 +268,9 @@ for x in range(args['iter']):
 	Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
 	estimator_array = Cross_Val['estimator']
 	results = Cross_Val['test_score']
-	Cross_val_estimator = estimator_array[-1]
+	Lowest_Score = np.amin(results)
+	Lowest_Score_Index = np.where(results==Lowest_Score)
+	Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
 	Cross_val_estimator.model.save(Cross_Model_File)
 	# Assessing optimal model
 	Cross_model = load_model(Cross_Model_File)
@@ -309,7 +311,7 @@ Y_Proposed_Cross_full = Best_Cross_Model.predict(X_full)
 Y_Proposed_Classic_full = Best_Classic_Model.predict(X_full)
 infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
-infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: kfold.get_n_splits()}))
+infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: args['fold']}))
 infoFile.close()
 Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,False,Y_Average,Y_full)
 Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,True,Y_Average,Y_full)
