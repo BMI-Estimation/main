@@ -4,6 +4,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from keras.models import load_model
@@ -25,6 +26,7 @@ ap.add_argument("-bs", "--batch", type=int, required=True, help="Batch Size.")
 ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
 ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
 ap.add_argument("-f", "--fold", type=int, required=True, help="Folds.")
+ap.add_argument("-s", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
 args = vars(ap.parse_args())
 
 # Required files
@@ -255,8 +257,12 @@ for x in range(args['iter']):
 	history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
 	Y_Classic = Regressor.predict(X_test)
 	Regressor.model.save(Classic_Model_File)
-	kfold = KFold(n_splits=args['fold'], random_state=x)
-
+	if args['strat']:
+		kfold = args['fold']
+		fold_string ="Sfold"
+	else:
+		kfold = KFold(n_splits=args['fold'], random_state=x)
+		fold_string = "Fold"
 	#Cross validation
 	# Optimal estimator extraction
 	Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
@@ -303,7 +309,7 @@ Y_Proposed_Cross_full = Best_Cross_Model.predict(X_full)
 Y_Proposed_Classic_full = Best_Classic_Model.predict(X_full)
 infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
-infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
+infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: kfold.get_n_splits()}))
 infoFile.close()
 Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,False,Y_Average,Y_full)
 Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,True,Y_Average,Y_full)
