@@ -104,7 +104,7 @@ Y= Y.reshape(-1,1)
 print(X)
 print(Y)
 #model dimensions
-neuronsPerLayerExceptOutputLayer = [2,1]
+neuronsPerLayerExceptOutputLayer = [2]
 save = input("continue")
 # define base model
 def baseline_model():
@@ -268,7 +268,9 @@ for x in range(args['iter']):
 	Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
 	estimator_array = Cross_Val['estimator']
 	results = Cross_Val['test_score']
-	Cross_val_estimator = estimator_array[-1]
+	Lowest_Score = np.amin(results)
+	Lowest_Score_Index = np.where(results==Lowest_Score)
+	Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
 	Cross_val_estimator.model.save(Cross_Model_File)
 	# Assessing optimal model
 	Cross_model = load_model(Cross_Model_File)
