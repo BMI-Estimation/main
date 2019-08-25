@@ -16,62 +16,6 @@ import argparse
 from scipy.interpolate import interp1d
 import os
 import datetime
-from trainingFunctions import baseline_model, overallscore
-
-#Visualisation functions
-def showGraphs(history, Y_Classic, Y_Test,records,Y_Cross):
-	# loss
-	plt.plot(history.history['loss'])
-	plt.plot(history.history['val_loss'])
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('epoch')
-	plt.legend(['train','test'], loc='upper left')
-	plt.show()
-
-	# Cross validation model analysis (loss)
-	plt.plot(results)
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('Fold')
-	plt.legend(['train'], loc='upper left')
-	plt.show()
-
-	#Classic scatter
-	plt.scatter(Y_test, Y_Classic)
-	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Classic Model - Test Data')
-	plt.show()
-
-	#Cross scatter
-	plt.scatter(Y_test, Y_Cross)
-	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Cross Model - Test Data')
-	plt.show()
-	return
-
-def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross):
-	#Best Classic
-	plt.scatter(Y_test, Y_Best_Classic)
-	plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Model - Classic')
-	plt.show()
-
-	# Best Cross
-	plt.scatter(Y_Unseen, Y_Best_Cross)
-	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Model - Cross')
-	plt.show()
-	return
-
 #argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
@@ -79,11 +23,12 @@ ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False,
 ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
 ap.add_argument("-bs", "--batch", type=int, required=True, help="Batch Size.")
 ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
+ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
 args = vars(ap.parse_args())
 
 # Required files
-Front_input_file = "Front_Model.csv"
-Side_input_file = "Side_Model.csv"
+Front_input_file = "front.csv"
+Side_input_file = "side.csv"
 Final_BMI_Model = 'Final_Model_BMI.h5'
 Low_Score_File = 'Lowest_Score_BMI.txt'
 Classic_Model_File = 'Classical_BMI.h5'
@@ -94,11 +39,13 @@ if args["mass"]:
 	Front_Model_file = 'Mass_Model_Front.h5'
 	Side_Model_file = 'Mass_Model_Side.h5'
 	Height_Model_file = 'Height_Model.h5'
+	train_mass = True
 	Path_Extension = '/Mass/'
 elif args["BMI"]:
-	Front_Model_file = 'Final_Model_Front.h5'
-	Side_Model_file = 'Final_Model_Side_1.h5'
-	Path_Extension = '/BMI/'
+	Front_Model_file = 'Front.h5'
+	Side_Model_file = 'Side.h5'
+	train_mass = False
+	Path_Extension = '/BMI_comp/'
 
 # load dataset inputs
 dataframe_traning_Side = open(Side_input_file, 'r')
@@ -116,15 +63,16 @@ Input_parameters_Side = np.asarray(Input_parameters_Side)
 Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front) if index not in badDataIndex]
 Input_parameters_Front = np.asarray(Input_parameters_Front)
 
-# height related functionality
-if args["mass"]:
+#height related functionality
+if train_mass==True:
 	Height_Side = Input_parameters_Side[:,1]
 	Height_Front = Input_parameters_Front[:,1]
 	Height = np.column_stack((Height_Front,Height_Side))
 	Height_Model = load_model(Height_Model_file)
 	Height_predictions = Height_Model.predict(Height)
 
-# load dataset BMI
+
+#load dataset BMI
 BMI_file = "BMI.csv"
 dataframe_traning_outputs = open(BMI_file, 'r')
 reader = csv.reader(dataframe_traning_outputs, delimiter=",")
@@ -133,60 +81,156 @@ BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
 
-# Load front and side models
+#Load front and side models
 Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
 
-# Get respective predictions
+#Get respective predictions
 Y_Side = Side_Model.predict(Input_parameters_Side)
+print(len(Y_Side))
 Y_Front = Front_Model.predict(Input_parameters_Front)
-if args["mass"]:
-	Y_Side = Y_Side/(Height*Height)
-	Y_Front = Y_Front*(Height*Height)
-
-# split into input (X) and output (Y) variables
+print(len(Y_Front))
+# if train_mass==True:
+#     Y_Side = Y_Side/(Height*Height)
+#     Y_Front = Y_Front*(Height*Height)
+#
+# # split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
 Y= Y.reshape(-1,1)
+print(X)
+print(Y)
+#model dimensions
+neuronsPerLayerExceptOutputLayer = [2,1]
+save = input("continue")
+# define base model
+def baseline_model():
+	# create model
+	regressor = Sequential()
+	regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=2, activation="relu"))
+	for units in neuronsPerLayerExceptOutputLayer[1:]:
+		regressor.add(Dense(units, activation="relu"))
+	regressor.add(Dense(1, activation="linear"))
+	regressor.compile(optimizer='adam', loss='mean_absolute_error')
+	return regressor
 
-# model dimensions
-neuronsPerLayerExceptOutputLayer = [4, 3, 2]
+#Classic and cross model creation
+Regressor= baseline_model()
+Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
-# Classic and cross model creation
-build = baseline_model(2, neuronsPerLayerExceptOutputLayer)
-Regressor= build()
-Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
-
-# Directory functionality
+#Directory functionality
 NetworkArc = [str(row.units) for row in Regressor.model.layers]
 NetworkArc = '-'.join(NetworkArc)
 today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
-directory = 'models/' + today + '/BMIAverager/' + NetworkArc + '/'
+directory = 'models/' + today + Path_Extension + NetworkArc + '/'
 os.makedirs(directory)
 
-# create infofiles
+#create infofiles
 infoFile = open(directory + 'info.txt', 'w', newline='')
 
-# Separate file data into seen and unseen data prior to model comparison
+#Separate file data into seen and unseen data prior to model comparison
 seed = 10
 np.random.seed(seed)
+X_full = X.copy()
+Y_full = Y.copy()
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
 
+# score initialisation
+def overallscore(MAE, Max):
+	if MAE < 4:
+		m = interp1d([0,4],[4,0])
+		return MAE/Max + m(MAE)
+	else: return MAE/Max
 bestscores = {}
 best_class_score = 0
 best_cross_score = 0
 ClassHistory = None
 CrossHistory = None
 
-# finding optimal model
-for x in range(3):
+#Visualisation functions
+def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
+	# loss
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.legend(['train','test'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'loss'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	# Cross validation model analysis (loss)
+	plt.plot(results)
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('Fold')
+	plt.legend(['train'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'fold'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Classic scatter
+	plt.scatter(Y_Test, Y_Classic)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Classic Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'classic'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Cross scatter
+	plt.scatter(Y_Test, Y_Cross)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Cross Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'cross'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+	return
+
+
+
+def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,full):
+
+	#Best Classic
+	plt.scatter(Y_Unseen,Y_Best_Classic)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Classic')
+	fig = plt.gcf()
+	fig.savefig(directory+'best_classic'+str(full)+'.png')
+	plt.show()
+	plt.clf()
+	# Best Cross
+	plt.scatter(Y_Unseen, Y_Best_Cross)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Cross')
+	fig = plt.gcf()
+	fig.savefig(directory+'best_cross'+str(full)+'.png')
+	plt.show()
+	plt.clf()
+	return
+
+#finding optimal model
+for x in range(args['iter']):
 	np.random.seed(x)
 	# classic test split
 	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
 	history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
 	Y_Classic = Regressor.predict(X_test)
 	Regressor.model.save(Classic_Model_File)
-	kfold = KFold(n_splits=10, random_state=x)
+	kfold = KFold(n_splits=15, random_state=x)
+
 	#Cross validation
 	# Optimal estimator extraction
 	Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
@@ -211,10 +255,8 @@ for x in range(3):
 	print(str(Classical_MAE) + "\t" + str(Cross_MAE))
 	print(str(Classical_Max) + "\t" + str(Cross_Max))
 	#save file option
-	save = input("Save model?")
 	Classical_Overall = overallscore(Classical_MAE, Classical_Max)
 	Cross_Overall = overallscore(Cross_MAE, Cross_Max)
-	
 	if Classical_Overall > best_class_score:
 		Regressor.model.save(directory + Best_Classic_File)
 		bestscores['Classical'] = [Classical_MAE, Classical_Max]
@@ -226,15 +268,18 @@ for x in range(3):
 		bestscores['Cross'] = [Cross_MAE, Cross_Max]
 		best_cross_score = Cross_Overall
 		CrossHistory = results
-			
-	if args["visualize"]:showGraphs(history,Y_Classic,Y_Cross_Val)
-
+	if args["visualize"]:showGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x)
 Best_Classic_Model = load_model(directory+Best_Classic_File)
 Best_Cross_Model = load_model(directory+Best_Cross_File)
 Y_Proposed_Classic = Best_Classic_Model.predict(X_Unseen)
 Y_Proposed_Cross = Best_Cross_Model.predict(X_Unseen)
+Y_Proposed_Cross_full = Best_Cross_Model.predict(X_full)
+Y_Proposed_Classic_full = Best_Classic_Model.predict(X_full)
 infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
 infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
 infoFile.close()
-Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross)
+Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,0)
+Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,1)
+
+
