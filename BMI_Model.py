@@ -24,6 +24,7 @@ ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=
 ap.add_argument("-bs", "--batch", type=int, required=True, help="Batch Size.")
 ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
 ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
+ap.add_argument("-f", "--fold", type=int, required=True, help="Folds.")
 args = vars(ap.parse_args())
 
 # Required files
@@ -134,7 +135,14 @@ np.random.seed(seed)
 X_full = X.copy()
 Y_full = Y.copy()
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
-
+#Prediction Averages performance
+Y_Average =(Y_Side+Y_Front)/2
+MSE = mean_squared_error(Y_full, Y_Average)
+MAE = mean_absolute_error(Y_full, Y_Average)
+Max = max_error(Y_full, Y_Average)
+Line = "MSE:"+str(MSE)+" MAE:"+str(MAE)+" Max:"+str(Max)
+infoFile.write(Line)
+infoFile.write(str('\n'))
 # score initialisation
 def overallscore(MAE, Max):
 	if MAE < 4:
@@ -157,7 +165,7 @@ def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
 	plt.xlabel('epoch')
 	plt.legend(['train','test'], loc='upper left')
 	fig = plt.gcf()
-	fig.savefig(directory+'loss'+str(x)+'.png')
+	fig.savefig(directory+'loss_run_'+str(x)+'.png')
 	plt.show()
 	plt.clf()
 
@@ -168,7 +176,7 @@ def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
 	plt.xlabel('Fold')
 	plt.legend(['train'], loc='upper left')
 	fig = plt.gcf()
-	fig.savefig(directory+'fold'+str(x)+'.png')
+	fig.savefig(directory+'fold_run_'+str(x)+'.png')
 	plt.show()
 	plt.clf()
 
@@ -179,7 +187,7 @@ def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
 	plt.ylabel('Predicted')
 	plt.title('Classic Model - Test Data')
 	fig = plt.gcf()
-	fig.savefig(directory+'classic'+str(x)+'.png')
+	fig.savefig(directory+'classic_run_'+str(x)+'.png')
 	plt.show()
 	plt.clf()
 
@@ -190,14 +198,21 @@ def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
 	plt.ylabel('Predicted')
 	plt.title('Cross Model - Test Data')
 	fig = plt.gcf()
-	fig.savefig(directory+'cross'+str(x)+'.png')
+	fig.savefig(directory+'cross_run_'+str(x)+'.png')
 	plt.show()
 	plt.clf()
 	return
 
 
 
-def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,full):
+def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,Full_dataset,Y_Average,Y_full):
+
+	if (Full_dataset == True):
+		Classic_Path = directory + 'best_classic_full.png'
+		Cross_Path = directory + 'best_cross_full.png'
+	else:
+		Classic_Path = directory + 'best_classic.png'
+		Cross_Path = directory + 'best_cross.png'
 
 	#Best Classic
 	plt.scatter(Y_Unseen,Y_Best_Classic)
@@ -206,7 +221,7 @@ def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,full):
 	plt.ylabel('Predicted')
 	plt.title('Final Model - Classic')
 	fig = plt.gcf()
-	fig.savefig(directory+'best_classic'+str(full)+'.png')
+	fig.savefig(Classic_Path)
 	plt.show()
 	plt.clf()
 	# Best Cross
@@ -216,9 +231,20 @@ def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,full):
 	plt.ylabel('Predicted')
 	plt.title('Final Model - Cross')
 	fig = plt.gcf()
-	fig.savefig(directory+'best_cross'+str(full)+'.png')
+	fig.savefig(Cross_Path)
 	plt.show()
 	plt.clf()
+	#Average
+	if (Full_dataset==True):
+		plt.scatter(Y_full, Y_Average)
+		plt.plot([Y_full.min(), Y_full.max()], [Y_full.min(), Y_full.max()], 'k--', lw=4)
+		plt.xlabel('Measured')
+		plt.ylabel('Predicted')
+		plt.title('Average')
+		fig = plt.gcf()
+		fig.savefig(directory + 'Average.png')
+		plt.show()
+		plt.clf()
 	return
 
 #finding optimal model
@@ -229,7 +255,7 @@ for x in range(args['iter']):
 	history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
 	Y_Classic = Regressor.predict(X_test)
 	Regressor.model.save(Classic_Model_File)
-	kfold = KFold(n_splits=15, random_state=x)
+	kfold = KFold(n_splits=args['fold'], random_state=x)
 
 	#Cross validation
 	# Optimal estimator extraction
@@ -279,7 +305,10 @@ infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
 infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
 infoFile.close()
-Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,0)
-Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,1)
+Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,False,Y_Average,Y_full)
+Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,True,Y_Average,Y_full)
+
+
+
 
 
