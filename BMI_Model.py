@@ -17,6 +17,7 @@ import argparse
 from scipy.interpolate import interp1d
 import os
 import datetime
+from keras import optimizers
 #argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
@@ -74,16 +75,6 @@ if train_mass==True:
 	Height_Model = load_model(Height_Model_file)
 	Height_predictions = Height_Model.predict(Height)
 
-
-#load dataset BMI
-BMI_file = "BMI.csv"
-dataframe_traning_outputs = open(BMI_file, 'r')
-reader = csv.reader(dataframe_traning_outputs, delimiter=",")
-BMI = [[float(entry) for entry in row] for row in reader]
-BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
-BMI = np.asarray(BMI)
-BMI = BMI[:,2]
-
 #Load front and side models
 Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
@@ -93,28 +84,49 @@ Y_Side = Side_Model.predict(Input_parameters_Side)
 print(len(Y_Side))
 Y_Front = Front_Model.predict(Input_parameters_Front)
 print(len(Y_Front))
-# if train_mass==True:
-#     Y_Side = Y_Side/(Height*Height)
-#     Y_Front = Y_Front*(Height*Height)
-#
-# # split into input (X) and output (Y) variables
+
+diff = Y_Front - Y_Side
+diff = [i for i, dif in enumerate(diff) if dif > 5]
+Y_Front = [yf for i, yf in enumerate(Y_Front) if i not in diff]
+Y_Side = [ys for i, ys in enumerate(Y_Side) if i not in diff]
+
+Y_Front = np.asarray(Y_Front)
+Y_Side = np.asarray(Y_Side)
+
+#load dataset BMI
+BMI_file = "BMI.csv"
+dataframe_traning_outputs = open(BMI_file, 'r')
+reader = csv.reader(dataframe_traning_outputs, delimiter=",")
+BMI = [[float(entry) for entry in row] for row in reader]
+BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
+
+BMI = [b for i, b in enumerate(BMI) if i not in diff]
+BMI = np.asarray(BMI)
+BMI = BMI[:,2]
+
+print("XY", len(Y_Front), len(Y_Side), len(BMI))
+if train_mass==True:
+    Y_Side = Y_Side/(Height*Height)
+    Y_Front = Y_Front*(Height*Height)
+# split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
 Y= Y.reshape(-1,1)
 print(X)
 print(Y)
 #model dimensions
-neuronsPerLayerExceptOutputLayer = [2]
+neuronsPerLayerExceptOutputLayer = [1]
 save = input("continue")
 # define base model
 def baseline_model():
 	# create model
 	regressor = Sequential()
-	regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=2, activation="relu"))
+	regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=2, activation="relu",use_bias=False))
 	for units in neuronsPerLayerExceptOutputLayer[1:]:
 		regressor.add(Dense(units, activation="relu"))
 	regressor.add(Dense(1, activation="linear"))
-	regressor.compile(optimizer='adam', loss='mean_absolute_error')
+	opt = optimizers.adam(lr= 0.009)
+	regressor.compile(optimizer=opt, loss='mean_absolute_error')
 	return regressor
 
 #Classic and cross model creation
