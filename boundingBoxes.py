@@ -36,9 +36,9 @@ def drawBoundingBoxes(img, box, refWidth, pixelsPerMetric):
 
 		# draw lines between the midpoints
 	cv2.line(img, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
-		(255, 0, 255), 2)
+		(255, 0, 255), 10)
 	cv2.line(img, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
-		(255, 0, 255), 2)
+		(255, 0, 255), 10)
 
 	# compute the Euclidean distance between the midpoints
 	dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))

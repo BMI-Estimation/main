@@ -1,5 +1,5 @@
 from findPerson import findPersonInPhoto as persons
-from personMetrics import personArea, maskThickness
+from personMetrics import maskThickness
 from referenceObject import findReferenceObject as findRef
 import cv2
 

@@ -30,7 +30,7 @@ def extractObjectForegroundMask(img, box):
 
 def findReferenceObject(clone, width, show, mask):
 	contours = detectRectangle(clone)
-	if contours ==[]:
+	if contours == []:
 		gray = blurImage(clone)
 		edged = gray2binaryEdgedImage(gray)
 		contours = returnContours(edged)

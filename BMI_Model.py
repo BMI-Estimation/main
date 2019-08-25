@@ -1,10 +1,6 @@
 import numpy as np
-import pandas
-from keras.models import Sequential
-from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import KFold
-from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from keras.models import load_model
@@ -14,9 +10,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
 import argparse
-from scipy.interpolate import interp1d
 import os
 import datetime
+from trainingFunctions import overallscore, baseline_model
 from keras import optimizers
 #argparse
 ap = argparse.ArgumentParser()
@@ -43,12 +39,10 @@ if args["mass"]:
 	Front_Model_file = 'Mass_Model_Front.h5'
 	Side_Model_file = 'Mass_Model_Side.h5'
 	Height_Model_file = 'Height_Model.h5'
-	train_mass = True
 	Path_Extension = '/Mass/'
 elif args["BMI"]:
 	Front_Model_file = 'Front.h5'
 	Side_Model_file = 'Side.h5'
-	train_mass = False
 	Path_Extension = '/BMI_comp/'
 
 # load dataset inputs
@@ -68,7 +62,7 @@ Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front
 Input_parameters_Front = np.asarray(Input_parameters_Front)
 
 #height related functionality
-if train_mass==True:
+if args["mass"]:
 	Height_Side = Input_parameters_Side[:,1]
 	Height_Front = Input_parameters_Front[:,1]
 	Height = np.column_stack((Height_Front,Height_Side))
@@ -104,11 +98,21 @@ BMI = [b for i, b in enumerate(BMI) if i not in diff]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
 
-print("XY", len(Y_Front), len(Y_Side), len(BMI))
-if train_mass==True:
+#Load front and side models
+Front_Model = load_model(Front_Model_file)
+Side_Model = load_model(Side_Model_file)
+
+#Get respective predictions
+Y_Side = Side_Model.predict(Input_parameters_Side)
+print(len(Y_Side))
+Y_Front = Front_Model.predict(Input_parameters_Front)
+print(len(Y_Front))
+
+if args["mass"]:
     Y_Side = Y_Side/(Height*Height)
     Y_Front = Y_Front*(Height*Height)
-# split into input (X) and output (Y) variables
+
+# # split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
 Y= Y.reshape(-1,1)
@@ -117,21 +121,11 @@ print(Y)
 #model dimensions
 neuronsPerLayerExceptOutputLayer = [1]
 save = input("continue")
-# define base model
-def baseline_model():
-	# create model
-	regressor = Sequential()
-	regressor.add(Dense(neuronsPerLayerExceptOutputLayer[0], input_dim=2, activation="relu",use_bias=False))
-	for units in neuronsPerLayerExceptOutputLayer[1:]:
-		regressor.add(Dense(units, activation="relu"))
-	regressor.add(Dense(1, activation="linear"))
-	opt = optimizers.adam(lr= 0.009)
-	regressor.compile(optimizer=opt, loss='mean_absolute_error')
-	return regressor
 
 #Classic and cross model creation
-Regressor= baseline_model()
-Cross_Val_Regressor = KerasRegressor(build_fn=baseline_model, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
+build = baseline_model(2, neuronsPerLayerExceptOutputLayer)
+Regressor= build()
+Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
 #Directory functionality
 NetworkArc = [str(row.units) for row in Regressor.model.layers]
@@ -157,12 +151,6 @@ Max = max_error(Y_full, Y_Average)
 Line = "MSE:"+str(MSE)+" MAE:"+str(MAE)+" Max:"+str(Max)
 infoFile.write(Line)
 infoFile.write(str('\n'))
-# score initialisation
-def overallscore(MAE, Max):
-	if MAE < 4:
-		m = interp1d([0,4],[4,0])
-		return MAE/Max + m(MAE)
-	else: return MAE/Max
 bestscores = {}
 best_class_score = 0
 best_cross_score = 0
@@ -216,8 +204,6 @@ def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
 	plt.show()
 	plt.clf()
 	return
-
-
 
 def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,Full_dataset,Y_Average,Y_full):
 
@@ -315,6 +301,7 @@ for x in range(args['iter']):
 		best_cross_score = Cross_Overall
 		CrossHistory = results
 	if args["visualize"]:showGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x)
+
 Best_Classic_Model = load_model(directory+Best_Classic_File)
 Best_Cross_Model = load_model(directory+Best_Cross_File)
 Y_Proposed_Classic = Best_Classic_Model.predict(X_Unseen)
