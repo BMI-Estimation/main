@@ -3,16 +3,21 @@ from tkinter import filedialog
 from os import getcwd
 from PIL import Image, ImageTk
 from BMI_Estimation import detect
+from keras.models import load_model
+import numpy as np
 
 def Image_Segmentation_Data_Extraction(listOfImages):
 	arguments = {}
-
+	imageNames = [None, None]
 	for image in listOfImages:
 		if 'F' in image or 'f' in image:
-			arguments["fimg"] = image
+			imageNames[0] = image
 		elif 'S' in image or 's' in image:
-			arguments["simg"] = image
-		
+			imageNames[1] = image
+
+	imageNames = [entry for entry in imageNames if entry != None]
+	arguments["images"] = imageNames
+
 	arguments["width"] = RefObjectWidth.get()
 
 	if ShowMasks.get(): arguments["mask"] = True
@@ -21,20 +26,31 @@ def Image_Segmentation_Data_Extraction(listOfImages):
 	if ShowPics.get(): arguments["visualise"] = True
 	else: arguments["visualise"] = False
 
-	frontImageDimensions, sideImageDimensions = detect(arguments)
-	return frontImageDimensions, sideImageDimensions
+	listOfDimensions = detect(arguments)
+	return listOfDimensions
 
-def Predict_BMI(frontImageDimensions, sideImageDimensions):
+def Predict_BMI(listOfDimensions):
 	BMI = None
 	if UseOnlyFrontImage.get():
-		print("[INFO] Predicting Using Front Model Only", frontImageDimensions)
-		BMI = frontImageDimensions[0]
+		print("[INFO] Predicting Using Front Model Only", listOfDimensions)
+		model = load_model("Front.h5")
+		BMI = model.predict(np.asarray(listOfDimensions[0:1]))
 	elif UseOnlySideImage.get():
-		print("[INFO] Predicting Using Side Model Only", sideImageDimensions)
-		BMI = sideImageDimensions[0]
+		print("[INFO] Predicting Using Side Model Only", listOfDimensions)
+		model = load_model("Side.h5")
+		BMI = model.predict(np.asarray(listOfDimensions[0:1]))
 	else:
-		print(frontImageDimensions, sideImageDimensions)
-		BMI = frontImageDimensions[0]
+		listOfDimensions = np.asarray(listOfDimensions)
+		print("[INFO] Predicting Using All Models", listOfDimensions)
+		Fmodel = load_model("Front.h5")
+		fBMI = Fmodel.predict(listOfDimensions[0:1])
+		Smodel = load_model("Side.h5")
+		sBMI = Smodel.predict(listOfDimensions[1:])
+		Bmodel = load_model("BMI.h5")
+		BMI = Bmodel.predict(np.column_stack((fBMI, sBMI)))
+		BMI = BMI.tolist()
+		BMI.append(fBMI.tolist())
+		BMI.append(sBMI.tolist())
 	return BMI
 
 class Application(tk.Frame):
@@ -109,10 +125,18 @@ class Application(tk.Frame):
 		self.ShowPicsTickBox.grid(row=0, column=3)
 
 	def start(self):
-		frontImageDimensions, sideImageDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
+		if UseOnlyFrontImage.get():
+			listOfDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get()])
+		elif UseOnlySideImage.get():
+			listOfDimensions = Image_Segmentation_Data_Extraction([SideFileName.get()])
+		else: listOfDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
 		print('[INFO] Image Segmentation Completed')
-		BMI = Predict_BMI(frontImageDimensions, sideImageDimensions)
-		self.Prediction.config(text="\tYour BMI is " + str(BMI))
+		BMI = Predict_BMI(listOfDimensions)
+		BMIText = "Your BMI is " + str(round(BMI[0][0], 2))
+		if not UseOnlyFrontImage.get() and not UseOnlySideImage.get():
+			print('BMI', BMI)
+			BMIText += "\nFront Model Prediction: " + str(round(BMI[1][0][0], 2)) + "\nSide Model Prediction: " + str(round(BMI[2][0][0], 2))
+		self.Prediction.config(text=BMIText)
 		print('[INFO] BMI Prediction Completed')
 	
 	def UseOnlyOneImage(self):
