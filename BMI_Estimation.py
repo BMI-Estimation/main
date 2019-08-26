@@ -57,26 +57,22 @@ def extractDimensions(listOfNames, args, writer):
 
 def detect(args):
 	print("Detect Mode, Arguments: ", args)
-	# save images in root folder
-	fImage = cv2.imread(args['fimg'])
-	sImage = cv2.imread(args['simg'])
 	print('[INFO] Finding Front and Side Masks')
-	listOfPixelsPerMetric, listOfBinMasks = extractMasks([fImage, sImage], args)
+	listOfPixelsPerMetric, listOfBinMasks = extractMasks(args)
 	print('[INFO] Extracting Front and Side Dimensions')
 	dimensions = []
 	
 	for mask, ppm in zip(listOfBinMasks,listOfPixelsPerMetric):
 		dimensions.append(maskThickness(mask, ppm))
-	frontImageDimensions = dimensions[0]
-	sideImageDimensions = dimensions[1]
+
 	cv2.destroyAllWindows()
+	return dimensions
 
-	return frontImageDimensions, sideImageDimensions
-
-def extractMasks(listOfImages, args):
+def extractMasks(args):
 	listOfBinMasks = []
 	listOfPixelsPerMetric = []
-	for image in listOfImages:
+	for img in args["images"]:
+		image = cv2.imread(img)
 		listOfBinMasks.append(persons(image, args["visualise"], args["mask"]))
 		listOfPixelsPerMetric.append(findRef(image, args["width"], args["visualise"], args["mask"]))
 	return listOfPixelsPerMetric, listOfBinMasks
