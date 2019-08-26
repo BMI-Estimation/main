@@ -93,20 +93,9 @@ dataframe_traning_outputs = open(BMI_file, 'r')
 reader = csv.reader(dataframe_traning_outputs, delimiter=",")
 BMI = [[float(entry) for entry in row] for row in reader]
 BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
-
 BMI = [b for i, b in enumerate(BMI) if i not in diff]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
-
-#Load front and side models
-Front_Model = load_model(Front_Model_file)
-Side_Model = load_model(Side_Model_file)
-
-#Get respective predictions
-Y_Side = Side_Model.predict(Input_parameters_Side)
-print(len(Y_Side))
-Y_Front = Front_Model.predict(Input_parameters_Front)
-print(len(Y_Front))
 
 if args["mass"]:
     Y_Side = Y_Side/(Height*Height)
@@ -268,7 +257,8 @@ for x in range(args['iter']):
 	results = Cross_Val['test_score']
 	Lowest_Score = np.amin(results)
 	Lowest_Score_Index = np.where(results==Lowest_Score)
-	Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
+	Cross_val_estimator = estimator_array[-1]
+	# Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
 	Cross_val_estimator.model.save(Cross_Model_File)
 	# Assessing optimal model
 	Cross_model = load_model(Cross_Model_File)
