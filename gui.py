@@ -48,6 +48,9 @@ def Predict_BMI(listOfDimensions):
 		sBMI = Smodel.predict(listOfDimensions[1:])
 		Bmodel = load_model("BMI.h5")
 		BMI = Bmodel.predict(np.column_stack((fBMI, sBMI)))
+		BMI = BMI.tolist()
+		BMI.append(fBMI.tolist())
+		BMI.append(sBMI.tolist())
 	return BMI
 
 class Application(tk.Frame):
@@ -129,7 +132,11 @@ class Application(tk.Frame):
 		else: listOfDimensions = Image_Segmentation_Data_Extraction([FrontFileName.get(), SideFileName.get()])
 		print('[INFO] Image Segmentation Completed')
 		BMI = Predict_BMI(listOfDimensions)
-		self.Prediction.config(text="\tYour BMI is " + str(BMI[0][0]))
+		BMIText = "Your BMI is " + str(round(BMI[0][0], 2))
+		if not UseOnlyFrontImage.get() and not UseOnlySideImage.get():
+			print('BMI', BMI)
+			BMIText += "\nFront Model Prediction: " + str(round(BMI[1][0][0], 2)) + "\nSide Model Prediction: " + str(round(BMI[2][0][0], 2))
+		self.Prediction.config(text=BMIText)
 		print('[INFO] BMI Prediction Completed')
 	
 	def UseOnlyOneImage(self):
