@@ -59,6 +59,7 @@ Input_parameters_Front = [[float(entry) for entry in row] for row in reader]
 Input_parameters_Side = [row for index, row in enumerate(Input_parameters_Side) if index not in badDataIndex]
 Input_parameters_Side = np.asarray(Input_parameters_Side)
 Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front) if index not in badDataIndex]
+
 Input_parameters_Front = np.asarray(Input_parameters_Front)
 
 #height related functionality
@@ -74,11 +75,8 @@ Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
 
 #Get respective predictions
-Y_Side = Side_Model.predict(Input_parameters_Side)
-print(len(Y_Side))
 Y_Front = Front_Model.predict(Input_parameters_Front)
-print(len(Y_Front))
-
+Y_Side = Side_Model.predict(Input_parameters_Side)
 diff = Y_Front - Y_Side
 diff = [i for i, dif in enumerate(diff) if dif > 5]
 Y_Front = [yf for i, yf in enumerate(Y_Front) if i not in diff]
@@ -107,12 +105,13 @@ Y = BMI
 Y= Y.reshape(-1,1)
 print(X)
 print(Y)
+
 #model dimensions
-neuronsPerLayerExceptOutputLayer = [1]
+neuronsPerLayerExceptOutputLayer = [3,2]
 save = input("continue")
 
 #Classic and cross model creation
-build = baseline_model(2, neuronsPerLayerExceptOutputLayer)
+build = baseline_model(2, neuronsPerLayerExceptOutputLayer,0.001)
 Regressor= build()
 Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
@@ -122,7 +121,6 @@ NetworkArc = '-'.join(NetworkArc)
 today = str(datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S"))
 directory = 'models/' + today + Path_Extension + NetworkArc + '/'
 os.makedirs(directory)
-
 #create infofiles
 infoFile = open(directory + 'info.txt', 'w', newline='')
 
@@ -132,6 +130,8 @@ np.random.seed(seed)
 X_full = X.copy()
 Y_full = Y.copy()
 X,X_Unseen,Y,Y_Unseen = train_test_split(X,Y,test_size=0.2)
+Y_Front_Unseen = Front_Model.predict(Y_Unseen)
+Y_Side_Unseen = Side_Model.predict(Y_Unseen)
 #Prediction Averages performance
 Y_Average =(Y_Side+Y_Front)/2
 MSE = mean_squared_error(Y_full, Y_Average)
@@ -257,8 +257,7 @@ for x in range(args['iter']):
 	results = Cross_Val['test_score']
 	Lowest_Score = np.amin(results)
 	Lowest_Score_Index = np.where(results==Lowest_Score)
-	Cross_val_estimator = estimator_array[-1]
-	# Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
+	Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
 	Cross_val_estimator.model.save(Cross_Model_File)
 	# Assessing optimal model
 	Cross_model = load_model(Cross_Model_File)
