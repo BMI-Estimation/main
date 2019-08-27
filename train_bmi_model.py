@@ -1,3 +1,13 @@
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
+ap.add_argument("-b", "--batch", type=int, required=True, help="Batch Size.")
+ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
+ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
+ap.add_argument("-f", "--fold", type=int, required=True, help="Folds.")
+ap.add_argument("-s", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
+args = vars(ap.parse_args())
+
 import numpy as np
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import KFold
@@ -9,22 +19,10 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import max_error
 import csv
-import argparse
 import os
 import datetime
-from trainingFunctions import overallscore, baseline_model
+from trainingFunctions import overallscore, baseline_model, showBMIGraphs, Final_Graphs
 from keras import optimizers
-#argparse
-ap = argparse.ArgumentParser()
-ap.add_argument("-m", "--mass", nargs='?', const=True, type=bool, required=False, default=False, help="Train using mass and height.")
-ap.add_argument("-b", "--BMI", nargs='?', const=True, type=bool, required=False, default=False, help="Train using BMI.")
-ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=False, default=False, help="View Training Graphs.")
-ap.add_argument("-bs", "--batch", type=int, required=True, help="Batch Size.")
-ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
-ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
-ap.add_argument("-f", "--fold", type=int, required=True, help="Folds.")
-ap.add_argument("-s", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
-args = vars(ap.parse_args())
 
 # Required files
 Front_input_file = "front.csv"
@@ -35,15 +33,9 @@ Classic_Model_File = 'Classical_BMI.h5'
 Cross_Model_File = 'Cross_BMI.h5'
 Best_Classic_File = 'Best_Classic.h5'
 Best_Cross_File = 'Best_Cross.h5'
-if args["mass"]:
-	Front_Model_file = 'Mass_Model_Front.h5'
-	Side_Model_file = 'Mass_Model_Side.h5'
-	Height_Model_file = 'Height_Model.h5'
-	Path_Extension = '/Mass/'
-elif args["BMI"]:
-	Front_Model_file = 'Front.h5'
-	Side_Model_file = 'Side.h5'
-	Path_Extension = '/BMI_comp/'
+Front_Model_file = 'Front.h5'
+Side_Model_file = 'Side.h5'
+Path_Extension = '/BMI_comp/'
 
 # load dataset inputs
 dataframe_traning_Side = open(Side_input_file, 'r')
@@ -60,14 +52,6 @@ Input_parameters_Side = [row for index, row in enumerate(Input_parameters_Side) 
 Input_parameters_Side = np.asarray(Input_parameters_Side)
 Input_parameters_Front = [row for index, row in enumerate(Input_parameters_Front) if index not in badDataIndex]
 Input_parameters_Front = np.asarray(Input_parameters_Front)
-
-#height related functionality
-if args["mass"]:
-	Height_Side = Input_parameters_Side[:,1]
-	Height_Front = Input_parameters_Front[:,1]
-	Height = np.column_stack((Height_Front,Height_Side))
-	Height_Model = load_model(Height_Model_file)
-	Height_predictions = Height_Model.predict(Height)
 
 #Load front and side models
 Front_Model = load_model(Front_Model_file)
@@ -96,10 +80,6 @@ BMI = [row for index, row in enumerate(BMI) if index not in badDataIndex]
 BMI = [b for i, b in enumerate(BMI) if i not in diff]
 BMI = np.asarray(BMI)
 BMI = BMI[:,2]
-
-if args["mass"]:
-    Y_Side = Y_Side/(Height*Height)
-    Y_Front = Y_Front*(Height*Height)
 
 # # split into input (X) and output (Y) variables
 X = np.column_stack((Y_Side,Y_Front))
@@ -145,96 +125,6 @@ best_class_score = 0
 best_cross_score = 0
 ClassHistory = None
 CrossHistory = None
-
-#Visualisation functions
-def showGraphs( history, Y_Classic, Y_Test,Y_Cross,x):
-	# loss
-	plt.plot(history.history['loss'])
-	plt.plot(history.history['val_loss'])
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('epoch')
-	plt.legend(['train','test'], loc='upper left')
-	fig = plt.gcf()
-	fig.savefig(directory+'loss_run_'+str(x)+'.png')
-	plt.show()
-	plt.clf()
-
-	# Cross validation model analysis (loss)
-	plt.plot(results)
-	plt.title('model loss')
-	plt.ylabel('loss')
-	plt.xlabel('Fold')
-	plt.legend(['train'], loc='upper left')
-	fig = plt.gcf()
-	fig.savefig(directory+'fold_run_'+str(x)+'.png')
-	plt.show()
-	plt.clf()
-
-	#Classic scatter
-	plt.scatter(Y_Test, Y_Classic)
-	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Classic Model - Test Data')
-	fig = plt.gcf()
-	fig.savefig(directory+'classic_run_'+str(x)+'.png')
-	plt.show()
-	plt.clf()
-
-	#Cross scatter
-	plt.scatter(Y_Test, Y_Cross)
-	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Cross Model - Test Data')
-	fig = plt.gcf()
-	fig.savefig(directory+'cross_run_'+str(x)+'.png')
-	plt.show()
-	plt.clf()
-	return
-
-def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,Full_dataset,Y_Average,Y_full):
-
-	if (Full_dataset == True):
-		Classic_Path = directory + 'best_classic_full.png'
-		Cross_Path = directory + 'best_cross_full.png'
-	else:
-		Classic_Path = directory + 'best_classic.png'
-		Cross_Path = directory + 'best_cross.png'
-
-	#Best Classic
-	plt.scatter(Y_Unseen,Y_Best_Classic)
-	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Model - Classic')
-	fig = plt.gcf()
-	fig.savefig(Classic_Path)
-	plt.show()
-	plt.clf()
-	# Best Cross
-	plt.scatter(Y_Unseen, Y_Best_Cross)
-	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
-	plt.xlabel('Measured')
-	plt.ylabel('Predicted')
-	plt.title('Final Model - Cross')
-	fig = plt.gcf()
-	fig.savefig(Cross_Path)
-	plt.show()
-	plt.clf()
-	#Average
-	if (Full_dataset==True):
-		plt.scatter(Y_full, Y_Average)
-		plt.plot([Y_full.min(), Y_full.max()], [Y_full.min(), Y_full.max()], 'k--', lw=4)
-		plt.xlabel('Measured')
-		plt.ylabel('Predicted')
-		plt.title('Average')
-		fig = plt.gcf()
-		fig.savefig(directory + 'Average.png')
-		plt.show()
-		plt.clf()
-	return
 
 #finding optimal model
 for x in range(args['iter']):
@@ -290,7 +180,7 @@ for x in range(args['iter']):
 		bestscores['Cross'] = [Cross_MAE, Cross_Max]
 		best_cross_score = Cross_Overall
 		CrossHistory = results
-	if args["visualize"]:showGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x)
+	if args["visualize"]:showBMIGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x, directory, results)
 
 Best_Classic_Model = load_model(directory+Best_Classic_File)
 Best_Cross_Model = load_model(directory+Best_Cross_File)
@@ -302,8 +192,8 @@ infoFile.write(str(bestscores))
 infoFile.write(str('\n'))
 infoFile.write(str({'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: args['fold']}))
 infoFile.close()
-Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,False,Y_Average,Y_full)
-Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,True,Y_Average,Y_full)
+Final_Graphs(Y_Unseen,Y_Proposed_Classic,Y_Proposed_Cross,False,Y_Average,Y_full, directory)
+Final_Graphs(Y_full,Y_Proposed_Classic_full,Y_Proposed_Cross_full,True,Y_Average,Y_full, directory)
 
 
 

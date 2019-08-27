@@ -86,7 +86,95 @@ def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames,
 	plt.clf()
 	return
 
-# Model selection
+def showBMIGraphs(history, Y_Classic, Y_Test,Y_Cross,x, directory, results):
+	# loss
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.legend(['train','test'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'loss_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	# Cross validation model analysis (loss)
+	plt.plot(results)
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('Fold')
+	plt.legend(['train'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'fold_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Classic scatter
+	plt.scatter(Y_Test, Y_Classic)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Classic Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'classic_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Cross scatter
+	plt.scatter(Y_Test, Y_Cross)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Cross Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'cross_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+	return
+
+def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,Full_dataset,Y_Average,Y_full, directory):
+
+	if (Full_dataset == True):
+		Classic_Path = directory + 'best_classic_full.png'
+		Cross_Path = directory + 'best_cross_full.png'
+	else:
+		Classic_Path = directory + 'best_classic.png'
+		Cross_Path = directory + 'best_cross.png'
+
+	#Best Classic
+	plt.scatter(Y_Unseen,Y_Best_Classic)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Classic')
+	fig = plt.gcf()
+	fig.savefig(Classic_Path)
+	plt.show()
+	plt.clf()
+	# Best Cross
+	plt.scatter(Y_Unseen, Y_Best_Cross)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Cross')
+	fig = plt.gcf()
+	fig.savefig(Cross_Path)
+	plt.show()
+	plt.clf()
+	#Average
+	if (Full_dataset==True):
+		plt.scatter(Y_full, Y_Average)
+		plt.plot([Y_full.min(), Y_full.max()], [Y_full.min(), Y_full.max()], 'k--', lw=4)
+		plt.xlabel('Measured')
+		plt.ylabel('Predicted')
+		plt.title('Average')
+		fig = plt.gcf()
+		fig.savefig(directory + 'Average.png')
+		plt.show()
+		plt.clf()
+	return
+
 def overallscore(MAE, Max):
 	if MAE < 4:
 		m = interp1d([0,4],[4,0])
