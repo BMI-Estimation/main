@@ -330,3 +330,72 @@ def trainMass(X, Y, args, fileNames):
 	infoFile = open(fileNames["directory"] + 'Mass-info.txt', 'w', newline='')
 	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
 	return
+
+def trainCompensator(args, Regressor, Cross_Val_Regressor, X, Y, directory, fileNames, X_Unseen, Y_Unseen):
+	from keras.models import load_model
+
+	bestscores = {}
+	best_class_score = 0
+	best_cross_score = 0
+	ClassHistory = None
+	CrossHistory = None
+
+	# finding optimal model
+	for x in range(args['iter']):
+		np.random.seed(x)
+		# classic test split
+		X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
+		history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
+		Y_Classic = Regressor.predict(X_test)
+		Regressor.model.save(fileNames["Classic_Model_File"])
+
+		if args['strat']:
+			kfold = args['fold']
+			fold_string ="Sfold"
+		else:
+			kfold = KFold(n_splits=args['fold'], random_state=x)
+			fold_string = "Fold"
+
+		# Cross validation
+		# Optimal estimator extraction
+		Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
+		estimator_array = Cross_Val['estimator']
+		results = Cross_Val['test_score']
+		Lowest_Score = np.amin(results)
+		Lowest_Score_Index = np.where(results==Lowest_Score)
+		Cross_val_estimator = estimator_array[-1]
+		# Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
+		Cross_val_estimator.model.save(fileNames["Cross_Model_File"])
+		# Assessing optimal model
+		Cross_model = load_model(fileNames["Cross_Model_File"])
+		Y_Cross_Val = Cross_model.predict(X_test)
+		# unseen data tests
+		Y_Unseen_Classical = Regressor.predict(X_Unseen)
+		Y_Unseen_Cross = Cross_model.predict(X_Unseen)
+		# Performance indicators
+		Classical_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Cross)
+		Classical_MAE = mean_absolute_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_MAE = mean_absolute_error(Y_Unseen, Y_Unseen_Cross)
+		Classical_Max = max_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_Max = max_error(Y_Unseen, Y_Unseen_Cross)
+		print(str(Classical_MSE) + "\t" + str(Cross_MSE))
+		print(str(Classical_MAE) + "\t" + str(Cross_MAE))
+		print(str(Classical_Max) + "\t" + str(Cross_Max))
+		# save file option
+		Classical_Overall = overallscore(Classical_MAE, Classical_Max)
+		Cross_Overall = overallscore(Cross_MAE, Cross_Max)
+		if Classical_Overall > best_class_score:
+			Regressor.model.save(directory + fileNames["Best_Classic_File"])
+			bestscores['Classical'] = [Classical_MAE, Classical_Max]
+			best_class_score = Classical_Overall
+			ClassHistory = history
+
+		if Cross_Overall > best_cross_score:
+			Cross_model.model.save(directory + fileNames["Best_Cross_File"])
+			bestscores['Cross'] = [Cross_MAE, Cross_Max]
+			best_cross_score = Cross_Overall
+			CrossHistory = results
+		if args["visualize"]:showBMIGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x, directory, results)
+
+	return bestscores, fold_string
