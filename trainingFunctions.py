@@ -8,9 +8,10 @@ import os
 import datetime
 
 # define base model factory
-def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
+def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer, learn_rate = 0.001):
 	from keras.models import Sequential
 	from keras.layers import Dense
+	from keras import optimizers
 	# create model
 	def build_fn():
 		regressor = Sequential()
@@ -18,7 +19,8 @@ def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
 		for units in neuronsPerLayerExceptOutputLayer[1:]:
 			regressor.add(Dense(units, activation="relu"))
 		regressor.add(Dense(1, activation="linear"))
-		regressor.compile(optimizer='adam', loss='mean_absolute_error')
+		opt = optimizers.adam(lr=learn_rate)
+		regressor.compile(optimizer=opt, loss='mean_absolute_error')
 		return regressor
 	return build_fn
 
@@ -261,10 +263,13 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 			CrossHistory = results
 	
 	showGraphs(False, CrossHistory, X_Unseen, Y_Unseen, X_test, Y_test, fileNames, args)
-	
+	if args['fold']:
+		fold_string = 'Sfold'
+	else:
+		fold_string = 'fold'
 	infoFile.write(str(best_scores))
 	infoFile.write(str('\n'))
-	infoFile.write(str({'Number Of Iterations': args["number"], 'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
+	infoFile.write(str({'Number Of Iterations': args["number"], 'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: args['fold']}))
 	infoFile.close()
 	return
 
@@ -272,8 +277,8 @@ def trainWithBMI(X, Y, args, fileNames):
 	from keras.wrappers.scikit_learn import KerasRegressor
 	# Initialise Models and Folder Structure
 	inputDim = 6
-	neuronsPerLayerExceptOutputLayer = [7, 4]
-	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
+	neuronsPerLayerExceptOutputLayer = [7,4,2,1]
+	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer,0.01)
 	Classic_Model = build()
 	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
