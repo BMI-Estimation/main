@@ -60,10 +60,8 @@ Front_Model = load_model(Front_Model_file)
 Side_Model = load_model(Side_Model_file)
 
 # Get respective predictions
-Y_Side = Side_Model.predict(Input_parameters_Side)
-print(len(Y_Side))
 Y_Front = Front_Model.predict(Input_parameters_Front)
-print(len(Y_Front))
+Y_Side = Side_Model.predict(Input_parameters_Side)
 
 # filter data of points whose predictions contain errors
 diff = Y_Front - Y_Side
@@ -88,13 +86,11 @@ BMI = BMI[:,2]
 X = np.column_stack((Y_Side,Y_Front))
 Y = BMI
 Y= Y.reshape(-1,1)
-print(X)
-print(Y)
 # model dimensions
-neuronsPerLayerExceptOutputLayer = [1]
+neuronsPerLayerExceptOutputLayer = [3,2]
 
 # Classic and cross model creation
-build = baseline_model(2, neuronsPerLayerExceptOutputLayer)
+build = baseline_model(2, neuronsPerLayerExceptOutputLayer, 0.001)
 Regressor = build()
 Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 

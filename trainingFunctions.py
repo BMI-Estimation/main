@@ -368,8 +368,7 @@ def trainCompensator(args, Regressor, Cross_Val_Regressor, X, Y, directory, file
 		results = Cross_Val['test_score']
 		Lowest_Score = np.amin(results)
 		Lowest_Score_Index = np.where(results==Lowest_Score)
-		Cross_val_estimator = estimator_array[-1]
-		# Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
+		Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
 		Cross_val_estimator.model.save(fileNames["Cross_Model_File"])
 		# Assessing optimal model
 		Cross_model = load_model(fileNames["Cross_Model_File"])
