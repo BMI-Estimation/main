@@ -113,3 +113,6 @@ mask_rcnn_coco.h5
 *.h5
 *.jpg
 *.csv
+Lowest_Score_BMI.txt
+
+*.txt

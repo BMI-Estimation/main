@@ -8,9 +8,10 @@ import os
 import datetime
 
 # define base model factory
-def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
+def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer, learn_rate = 0.001):
 	from keras.models import Sequential
 	from keras.layers import Dense
+	from keras import optimizers
 	# create model
 	def build_fn():
 		regressor = Sequential()
@@ -18,7 +19,8 @@ def baseline_model(inputDim, neuronsPerLayerExceptOutputLayer):
 		for units in neuronsPerLayerExceptOutputLayer[1:]:
 			regressor.add(Dense(units, activation="relu"))
 		regressor.add(Dense(1, activation="linear"))
-		regressor.compile(optimizer='adam', loss='mean_absolute_error')
+		opt = optimizers.adam(lr=learn_rate)
+		regressor.compile(optimizer=opt, loss='mean_absolute_error')
 		return regressor
 	return build_fn
 
@@ -86,7 +88,95 @@ def showGraphs(is_class, history, X_Unseen, Y_Unseen, X_test, Y_test, fileNames,
 	plt.clf()
 	return
 
-# Model selection
+def showBMIGraphs(history, Y_Classic, Y_Test,Y_Cross,x, directory, results):
+	# loss
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.legend(['train','test'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'loss_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	# Cross validation model analysis (loss)
+	plt.plot(results)
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('Fold')
+	plt.legend(['train'], loc='upper left')
+	fig = plt.gcf()
+	fig.savefig(directory+'fold_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Classic scatter
+	plt.scatter(Y_Test, Y_Classic)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Classic Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'classic_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+
+	#Cross scatter
+	plt.scatter(Y_Test, Y_Cross)
+	plt.plot([Y_Test.min(), Y_Test.max()], [Y_Test.min(), Y_Test.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Cross Model - Test Data')
+	fig = plt.gcf()
+	fig.savefig(directory+'cross_run_'+str(x)+'.png')
+	plt.show()
+	plt.clf()
+	return
+
+def Final_Graphs(Y_Unseen,Y_Best_Classic,Y_Best_Cross,Full_dataset,Y_Average,Y_full, directory):
+
+	if (Full_dataset == True):
+		Classic_Path = directory + 'best_classic_full.png'
+		Cross_Path = directory + 'best_cross_full.png'
+	else:
+		Classic_Path = directory + 'best_classic.png'
+		Cross_Path = directory + 'best_cross.png'
+
+	#Best Classic
+	plt.scatter(Y_Unseen,Y_Best_Classic)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Classic')
+	fig = plt.gcf()
+	fig.savefig(Classic_Path)
+	plt.show()
+	plt.clf()
+	# Best Cross
+	plt.scatter(Y_Unseen, Y_Best_Cross)
+	plt.plot([Y_Unseen.min(), Y_Unseen.max()], [Y_Unseen.min(), Y_Unseen.max()], 'k--', lw=4)
+	plt.xlabel('Measured')
+	plt.ylabel('Predicted')
+	plt.title('Final Model - Cross')
+	fig = plt.gcf()
+	fig.savefig(Cross_Path)
+	plt.show()
+	plt.clf()
+	#Average
+	if (Full_dataset==True):
+		plt.scatter(Y_full, Y_Average)
+		plt.plot([Y_full.min(), Y_full.max()], [Y_full.min(), Y_full.max()], 'k--', lw=4)
+		plt.xlabel('Measured')
+		plt.ylabel('Predicted')
+		plt.title('Average')
+		fig = plt.gcf()
+		fig.savefig(directory + 'Average.png')
+		plt.show()
+		plt.clf()
+	return
+
 def overallscore(MAE, Max):
 	if MAE < 4:
 		m = interp1d([0,4],[4,0])
@@ -142,7 +232,10 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 	for x in range(args["number"]):
 		np.random.seed(x)
 		# evaluate model with dataset for Cross Validation
-		kfold = KFold(n_splits=10, random_state=x)
+		if args['strat']:
+			kfold = args['fold']
+		else:
+			kfold = KFold(n_splits=args['fold'], random_state=x)
 		# Optimal estimator extraction
 		Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True, scoring='neg_mean_absolute_error')
 		results = Cross_Val["test_score"]
@@ -170,10 +263,13 @@ def train(X, Y, args, CM, CVR , fileNames, infoFile):
 			CrossHistory = results
 	
 	showGraphs(False, CrossHistory, X_Unseen, Y_Unseen, X_test, Y_test, fileNames, args)
-	
+	if args['fold']:
+		fold_string = 'Sfold'
+	else:
+		fold_string = 'fold'
 	infoFile.write(str(best_scores))
 	infoFile.write(str('\n'))
-	infoFile.write(str({'Number Of Iterations': args["number"], 'Batch': args["batch"], 'Epochs': args['epochs'], 'Folds': kfold.get_n_splits()}))
+	infoFile.write(str({'Number Of Iterations': args["number"], 'Batch': args["batch"], 'Epochs': args['epochs'], fold_string: args['fold']}))
 	infoFile.close()
 	return
 
@@ -181,8 +277,8 @@ def trainWithBMI(X, Y, args, fileNames):
 	from keras.wrappers.scikit_learn import KerasRegressor
 	# Initialise Models and Folder Structure
 	inputDim = 6
-	neuronsPerLayerExceptOutputLayer = [7, 4]
-	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer)
+	neuronsPerLayerExceptOutputLayer = [7,4,2,1]
+	build = baseline_model(inputDim, neuronsPerLayerExceptOutputLayer,0.01)
 	Classic_Model = build()
 	Cross_Val_Regressor = KerasRegressor(build_fn=build, epochs=args['epochs'], batch_size=args['batch'], verbose=1)
 
@@ -239,3 +335,71 @@ def trainMass(X, Y, args, fileNames):
 	infoFile = open(fileNames["directory"] + 'Mass-info.txt', 'w', newline='')
 	train(X, Y, args, Classic_Model, Cross_Val_Regressor, fileNames, infoFile)
 	return
+
+def trainCompensator(args, Regressor, Cross_Val_Regressor, X, Y, directory, fileNames, X_Unseen, Y_Unseen):
+	from keras.models import load_model
+
+	bestscores = {}
+	best_class_score = 0
+	best_cross_score = 0
+	ClassHistory = None
+	CrossHistory = None
+
+	# finding optimal model
+	for x in range(args['iter']):
+		np.random.seed(x)
+		# classic test split
+		X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
+		history = Regressor.fit(X_train, Y_train, batch_size=args['batch'], epochs=args['epochs'], verbose=1, validation_data=(X_test, Y_test))
+		Y_Classic = Regressor.predict(X_test)
+		Regressor.model.save(fileNames["Classic_Model_File"])
+
+		if args['strat']:
+			kfold = args['fold']
+			fold_string ="Sfold"
+		else:
+			kfold = KFold(n_splits=args['fold'], random_state=x)
+			fold_string = "Fold"
+
+		# Cross validation
+		# Optimal estimator extraction
+		Cross_Val = cross_validate(Cross_Val_Regressor, X, Y, cv=kfold, return_estimator=True)
+		estimator_array = Cross_Val['estimator']
+		results = Cross_Val['test_score']
+		Lowest_Score = np.amin(results)
+		Lowest_Score_Index = np.where(results==Lowest_Score)
+		Cross_val_estimator = estimator_array[np.ndarray.item(Lowest_Score_Index[0])]
+		Cross_val_estimator.model.save(fileNames["Cross_Model_File"])
+		# Assessing optimal model
+		Cross_model = load_model(fileNames["Cross_Model_File"])
+		Y_Cross_Val = Cross_model.predict(X_test)
+		# unseen data tests
+		Y_Unseen_Classical = Regressor.predict(X_Unseen)
+		Y_Unseen_Cross = Cross_model.predict(X_Unseen)
+		# Performance indicators
+		Classical_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_MSE = mean_squared_error(Y_Unseen, Y_Unseen_Cross)
+		Classical_MAE = mean_absolute_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_MAE = mean_absolute_error(Y_Unseen, Y_Unseen_Cross)
+		Classical_Max = max_error(Y_Unseen, Y_Unseen_Classical)
+		Cross_Max = max_error(Y_Unseen, Y_Unseen_Cross)
+		print(str(Classical_MSE) + "\t" + str(Cross_MSE))
+		print(str(Classical_MAE) + "\t" + str(Cross_MAE))
+		print(str(Classical_Max) + "\t" + str(Cross_Max))
+		# save file option
+		Classical_Overall = overallscore(Classical_MAE, Classical_Max)
+		Cross_Overall = overallscore(Cross_MAE, Cross_Max)
+		if Classical_Overall > best_class_score:
+			Regressor.model.save(directory + fileNames["Best_Classic_File"])
+			bestscores['Classical'] = [Classical_MAE, Classical_Max]
+			best_class_score = Classical_Overall
+			ClassHistory = history
+
+		if Cross_Overall > best_cross_score:
+			Cross_model.model.save(directory + fileNames["Best_Cross_File"])
+			bestscores['Cross'] = [Cross_MAE, Cross_Max]
+			best_cross_score = Cross_Overall
+			CrossHistory = results
+		if args["visualize"]:showBMIGraphs(history,Y_Classic,Y_test,Y_Cross_Val,x, directory, results)
+
+	return bestscores, fold_string
