@@ -4,8 +4,8 @@ ap.add_argument("-v", "--visualize", nargs='?', const=True, type=bool, required=
 ap.add_argument("-b", "--batch", type=int, required=True, help="Batch Size.")
 ap.add_argument("-e", "--epochs", type=int, required=True, help="Number of Epochs per training cycle.")
 ap.add_argument("-n", "--iter", type=int, required=True, help="Iterations.")
-ap.add_argument("-f", "--fold", type=int, required=True, help="Folds.")
-ap.add_argument("-s", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
+ap.add_argument("-fo", "--fold", type=int, required=True, help="Folds.")
+ap.add_argument("-st", "--strat", nargs='?', const=True, type=bool, required=False, default=False, help="Stratified.")
 args = vars(ap.parse_args())
 
 import numpy as np

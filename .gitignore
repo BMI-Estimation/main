@@ -114,5 +114,7 @@ mask_rcnn_coco.h5
 *.jpg
 *.csv
 Lowest_Score_BMI.txt
-
 *.txt
+!Front.h5
+!Side.h5
+!BMI.h5
