@@ -10,9 +10,10 @@ def Image_Segmentation_Data_Extraction(listOfImages):
 	arguments = {}
 	imageNames = [None, None]
 	for image in listOfImages:
-		if 'F' in image or 'f' in image:
+		imageName = image.split('/')[-1]
+		if 'F' in imageName or 'f' in imageName:
 			imageNames[0] = image
-		elif 'S' in image or 's' in image:
+		elif 'S' in imageName or 's' in imageName:
 			imageNames[1] = image
 
 	imageNames = [entry for entry in imageNames if entry != None]

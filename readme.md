@@ -47,7 +47,7 @@ Open the terminal in the root directory of the repository and run the following 
 To generate the front and side view data from your image dataset, first copy your images into the 'images' folder.
 Please ensure the files are named correctly as described above, and that there are a equal number of front and side photographs in the folder.
 
-Download the [Mask-RCNN]() trained on the COCO Dataset.
+Download the [Mask-RCNN](https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5) trained on the COCO Dataset.
 
 Next, run the BMI_Estimation.py file from the terminal.
 
@@ -170,3 +170,40 @@ All other .h5 files produced and saved in the root directory are files left over
 ---
 
 ## Using the GUI for BMI Prediction
+
+The user interface is shown below.
+
+![GUI](assets/gui.JPG)
+
+The steps to using the interface are as follows:
+
+1. Enter the width (horizontal) of the reference square.
+
+2. Click 'Browse Files' for 'Front Image', choose your front image. Ensure that the filename contains an 'f' or 'F', but no 'S' or 's'.
+
+3. Click 'Browse Files' for 'Side Image', choose your front image. Ensure that the filename contains an 's' or 'S', but no 'f' or 'F'.
+
+Your interface should now resemble this:
+
+![Used GUI](assets/usedgui.JPG)
+
+After selecting the photographs, you have the following options:
+
+- 'Only Use Front Image':
+  - If you only have a front image selected, tick this option.
+
+- 'Only Use Side Image':
+  - If you only have a side image selected, tick this option.
+
+If you attempt to click 'Predict BMI' after only selecting one photograph and not selecting the relevant option above, the program will raise an error.
+
+- 'Show Masks'
+  - Choose this option to show the masks of the reference object and person detection.
+  The program pauses its execution while any of the image windows are still open.
+  
+  - Choose this option if you need to see if there were any errors during the image processing.
+
+- 'Show Image Segmentation'
+  - Shows the seperation of the pixel masks from the original image.
+  
+  - Shows the pixel masks from foreground extraction as well as the pixel masks extracted from the Mask RCNN object detection.
