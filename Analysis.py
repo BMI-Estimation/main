@@ -4,7 +4,7 @@ from keras.models import load_model
 import csv
 import os
 import datetime
-
+from scipy.stats import norm
 #Required files
 Front_input_file = "front.csv"
 Side_input_file = "side.csv"
@@ -103,8 +103,8 @@ def ErrorAnalysis(Actual,Prediction,length,Dataset,Model):
 	plt.clf()
 def TotalError(Actual,Prediction,Model):
 	diff = np.abs((Actual - Prediction))
+	diff2=diff.copy()
 	diff = (diff / Actual) * 100
-	print(diff[0:50])
 	diff = diff[(diff <= 10000)]
 	# print(len(diff))
 	# print(diff[0:10])
@@ -117,6 +117,13 @@ def TotalError(Actual,Prediction,Model):
 	fig.savefig(directory+Model+'_Total_'+'Hist.png')
 	plt.show()
 	plt.clf()
+	#error data
+	average_error = np.average(diff2)
+	standard_deviation = np.std(diff2)
+	variance = np.var(diff2)
+	print(Model)
+	print(str(average_error)+'\t'+str(standard_deviation)+'\t'+str(variance))
+	#create normal curve
 #Underweight check
 Underweight = BMI.copy()
 Underweight=[[i,row[2]]for i,row in enumerate(Underweight) if row[2]<18.5]
@@ -213,12 +220,8 @@ ErrorAnalysis(Obese_Values,Obese_Prediction_C,len(Obese),'Obese','Compensator')
 
 #total dataset
 total = np.concatenate((Underweight_Values,Healthyweight_Values,Overweight_Values,Obese_Values))
-print(total.shape)
-print(total[0:10])
 total_front = np.concatenate((Underweight_Prediction_F,Healthyweight_Prediction_F,Overweight_Prediction_F,Obese_Prediction_F))
 total_front = total_front[:,0]
-print(total_front.shape)
-print(total_front[0:10])
 total_side = np.concatenate((Underweight_Prediction_S,Healthyweight_Prediction_S,Overweight_Prediction_S,Obese_Prediction_S))
 total_side = total_side[:,0]
 total_comp = np.concatenate((Underweight_Prediction_C,Healthyweight_Prediction_C,Overweight_Prediction_C,Obese_Prediction_C))
@@ -226,4 +229,5 @@ total_comp = total_comp[:,0]
 TotalError(total,total_front,'Front')
 TotalError(total,total_side,'Side')
 TotalError(total,total_comp,'Compensator')
+
 
