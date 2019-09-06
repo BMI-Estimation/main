@@ -10,7 +10,6 @@ Front_input_file = "front.csv"
 Side_input_file = "side.csv"
 Front_Model_file = 'Front.h5'
 Side_Model_file = 'Side.h5'
-Path_Extension = '/BMI_comp/'
 BMI_Model_File = 'BMI.h5'
 BMI_file = "BMI.csv"
 #load datasets

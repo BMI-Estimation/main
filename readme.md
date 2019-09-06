@@ -20,7 +20,7 @@ As a safeguard for front and side images accidentally being swopped, an image is
 ## Requirements
 
 This project was done using Python 3.7.4, however it should work with any Python 3 installation.
-Should there be required packages not supported by the current distrbution of Python, please use Python 3.7.4 as available from [python.org](https://www.python.org/downloads/).
+Should there be required packages not supported by the current distribution of Python, please use Python 3.7.4 as available from [python.org](https://www.python.org/downloads/).
 
 Please ensure that the default python package installer *pip* has been updated by running the following:
 
@@ -47,7 +47,7 @@ Open the terminal in the root directory of the repository and run the following 
 To generate the front and side view data from your image dataset, first copy your images into the 'images' folder.
 Please ensure the files are named correctly as described above, and that there are a equal number of front and side photographs in the folder.
 
-Download the [Mask-RCNN](https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5) trained on the COCO Dataset.
+Download the [Mask-RCNN](https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5) trained on the COCO Dataset, place it in root directory.
 
 Next, run the BMI_Estimation.py file from the terminal.
 
@@ -204,6 +204,25 @@ If you attempt to click 'Predict BMI' after only selecting one photograph and no
   - Choose this option if you need to see if there were any errors during the image processing.
 
 - 'Show Image Segmentation'
-  - Shows the seperation of the pixel masks from the original image.
+  - Shows the separation of the pixel masks from the original image.
   
   - Shows the pixel masks from foreground extraction as well as the pixel masks extracted from the Mask RCNN object detection.
+
+## Evaluating Model Performance
+
+Place the following files in to the root directory:
+
+- front.csv
+- side.csv
+- Front.h5
+- Side.h5
+- BMI.h5
+- BMI.csv
+
+Run the Analysis.py file.
+
+    python Analysis.py
+
+> *Note: Later releases will include the ability to only analyse Front, Side and BMI models separately.
+For the moment, all of the above files are required.
+If you have not trained all the models or have all the data as described earlier in these instructions, use the default files as provided in this repo.
