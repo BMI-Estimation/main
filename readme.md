@@ -1,6 +1,7 @@
 # Digital Estimation of Body Mass Index
 
 The following code repository contains the source code for the ELEN4002 Laboratory Project.
+The ELEN4002 course is to be completed for the degree of Bachelor of Sciences in Engineering (Electrical), for the School of Electrical and Information Engineering at the University of the Witwatersrand, Johannesburg.
 The purpose of this project is to determine, to a reasonable degree of certainty, the Body Mass Index (BMI) of a person from their photograph.
 
 BMI is defined by the following ratio:
